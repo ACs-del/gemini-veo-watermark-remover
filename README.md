@@ -1,46 +1,51 @@
-# Veo Watermark Remover — Lossless Video Watermark Removal Tool
+# Gemini & Veo Watermark Remover — Lossless Watermark Removal Tool
 
-An open-source tool to remove Google Veo watermarks from AI-generated videos with pixel-perfect, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact Reverse Alpha Blending algorithm instead of unpredictable AI inpainting.
+An open-source tool to remove **Gemini image watermarks** and **Veo video watermarks** from AI-generated content with pixel-perfect, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact **Reverse Alpha Blending** algorithm instead of unpredictable AI inpainting.
 
-> 🚀 Looking for the `Online Veo Watermark Remover`? Try [removegeminiwatermark.io](https://removegeminiwatermark.io/) — free, no install, works directly in your browser.
+🚀 **Looking for the `Online Watermark Remover`?** Try [removegeminiwatermark.io](https://removegeminiwatermark.io) — free, no install, works directly in your browser.
 
-[Online Tool](https://removegeminiwatermark.io/)  [CLI](#cli)  [Browser SDK](#programmatic-browser)  [Node.js SDK](#programmatic-nodejs)
-
-[中文文档](README_zh.md)
-
----
+💡 **Need to remove other AI watermarks?** Try our general-purpose AI watermark remover (coming soon).
 
 ## Features
 
-- ✅ **100% Local Processing** - All video processing happens locally in your browser or on your machine. Nothing is uploaded.
-- ✅ **Mathematical Precision** - Based on the Reverse Alpha Blending formula, not "hallucinating" AI models.
-- ✅ **Frame-by-Frame Restoration** - Every frame is processed individually with pixel-exact accuracy.
-- ✅ **Audio Passthrough** - Audio track is preserved without re-encoding.
-- ✅ **Dual Video Backend** - WebCodecs API (browser, hardware-accelerated) + ffmpeg.wasm (Node.js / fallback).
-- ✅ **Flexible Usage** - Online tool for quick use, CLI for scripting and automation, SDK for integration.
-- ✅ **Cross-Platform** - Works in modern browsers (Chrome 94+, Edge 94+) and Node.js environments.
+- ✅ **Gemini + Veo** — First tool to handle both Gemini image and Veo video watermarks
+- ✅ **100% Local Processing** — All processing happens locally. Nothing is uploaded.
+- ✅ **Mathematical Precision** — Reverse Alpha Blending formula, not AI hallucination.
+- ✅ **Auto-Detection** — NCC template matching identifies watermark size and position.
+- ✅ **Flexible Usage** — Online tool, Chrome extension, userscript, CLI, SDK, and AI Agent Skill.
+- ✅ **Cross-Platform** — Works in modern browsers and Node.js environments.
 
-## ⚠️ Disclaimer
+## Watermark Removal Examples
 
-> **USE AT YOUR OWN RISK**
->
-> This tool modifies video files. While it is designed to work reliably, unexpected results may occur due to:
-> - Variations in Veo's watermark implementation
-> - Corrupted or unusual video formats
-> - Edge cases not covered by testing
->
-> The author assumes no responsibility for any data loss, video corruption, or unintended modifications.
+| Original Image | Watermark Removed |
+| --- | --- |
+| ![Before](https://removegeminiwatermark.io/images/demo-before.webp) | ![After](https://removegeminiwatermark.io/images/demo-after.webp) |
 
-## How to Remove Veo Watermarks
+## How to Remove Watermarks
 
-### Online Veo Watermark Remover (Recommended)
+### Online Watermark Remover (Recommended)
 
-For all users — the fastest and easiest way to remove Veo watermarks from videos:
+The fastest and easiest way — works for both Gemini images and Veo videos:
 
-1. Open [removegeminiwatermark.io](https://removegeminiwatermark.io/).
-2. Drag and drop or click to select your Veo-generated video.
-3. The engine will automatically process and remove the watermark frame by frame.
-4. Download the cleaned video.
+1. Open [removegeminiwatermark.io](https://removegeminiwatermark.io).
+2. Drag and drop your Gemini image or Veo video.
+3. The engine will automatically process and remove the watermark.
+4. Download the cleaned file.
+
+### Chrome Extension
+
+Automatically removes watermarks from Gemini-generated images on Gemini pages:
+
+1. Install from the Chrome Web Store (coming soon) or load unpacked from `src/extension/`.
+2. Open Gemini. The extension automatically processes supported images.
+3. Preview, copy, and download actions all return cleaned images.
+
+### Userscript (Tampermonkey / Violentmonkey)
+
+1. Install a userscript manager (e.g., Tampermonkey).
+2. Install `gemini-veo-watermark-remover.user.js` from `src/userscript/`.
+3. Navigate to Gemini conversation pages.
+4. Images are automatically cleaned in-place.
 
 ### CLI
 
@@ -48,49 +53,123 @@ For scripting, CI, and local batch workflows:
 
 ```bash
 # Using npx (zero install)
-npx gemini-veo-watermark-remover remove input.mp4 -o output.mp4
+npx gemini-veo-watermark-remover remove image.png
+npx gemini-veo-watermark-remover remove video.mp4
 
 # Or install globally
 npm i -g gemini-veo-watermark-remover
-vwr remove input.mp4
-vwr remove input.mp4 --output clean.mp4 --overwrite
-vwr remove input.mp4 --json  # machine-readable output
+vwr remove image.png -o clean.png
+vwr remove video.mp4 --verbose
+vwr remove image.jpg --json  # machine-readable output
 ```
 
-### Programmatic (Node.js)
+Supported formats:
+- **Images**: PNG, JPEG, WebP, BMP, TIFF (Gemini watermark)
+- **Videos**: MP4, WebM, MOV, AVI, MKV (Veo watermark)
 
-```js
-import { processVideoFile } from 'gemini-veo-watermark-remover/node';
+### SDK Usage
 
-await processVideoFile('input.mp4', 'output.mp4', {
-  onProgress: (current, total) => {
-    console.log(`Processing: ${current}/${total} frames`);
-  }
-});
-```
+```javascript
+// Browser — remove Gemini watermark from image
+import { removeGeminiWatermark } from 'gemini-veo-watermark-remover/browser';
 
-### Programmatic (Browser)
+const { blob, detected, confidence } = await removeGeminiWatermark(file);
+if (detected) {
+  const url = URL.createObjectURL(blob);
+  // Use cleaned image...
+}
 
-```js
+// Browser — process Veo video
 import { processVideoFile } from 'gemini-veo-watermark-remover/browser';
 
-const blob = await processVideoFile(file, {
-  onProgress: (current, total) => {
-    updateProgressBar(current / total);
-  }
+const cleanBlob = await processVideoFile(videoFile, {
+  onProgress: (current, total) => console.log(`${current}/${total} frames`),
 });
 
-// Trigger download
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = 'output.mp4';
-a.click();
+// Node.js — file-based API
+import { processVideoFile } from 'gemini-veo-watermark-remover/node';
+await processVideoFile('input.mp4', 'output.mp4');
+
+// Gemini-only lightweight import (no video deps)
+import { processImage, createImageProcessor } from 'gemini-veo-watermark-remover/gemini';
 ```
 
 ### Can't Remove Your Watermark?
 
-This tool targets Veo's visible watermark (the semi-transparent "Veo" text in the bottom-right corner). If your video watermark doesn't match a known Veo format, or you need to remove other types of watermarks, a general-purpose AI video watermark remover may be required.
+This tool targets **Gemini's visible watermark** (logo/star overlay) and **Veo's visible text watermark**. For other types of watermarks, try our general-purpose AI watermark remover (coming soon).
+
+## How It Works
+
+### The Watermarking Process
+
+Both Gemini and Veo apply watermarks using standard alpha compositing:
+
+$$watermarked = \alpha \cdot logo + (1 - \alpha) \cdot original$$
+
+### The Reverse Solution
+
+We solve for the original pixel value:
+
+$$original = \frac{watermarked - \alpha \cdot logo}{1 - \alpha}$$
+
+By calibrating the exact Alpha map from known outputs, we reconstruct the original pixels with zero loss.
+
+### Detection
+
+1. **Size catalog lookup** — matches image dimensions to predict watermark size (48×48 or 96×96 for Gemini).
+2. **NCC template matching** — Normalized Cross-Correlation search in the bottom-right region.
+3. **Confidence threshold** — only applies removal when detection confidence ≥ 50%.
+
+## Supported Formats
+
+### Gemini Image Watermarks
+
+| Condition | Watermark Size | Right Margin | Bottom Margin |
+| --- | --- | --- | --- |
+| Larger outputs (>1024px) | 96×96 | 64px | 64px |
+| Smaller outputs (≤1024px) | 48×48 | 32px | 32px |
+
+### Veo Video Watermarks
+
+| Resolution | Orientation | Watermark Size | Status |
+| --- | --- | --- | --- |
+| 1280×720 | Landscape | 80×28 px | ✅ |
+| 720×1280 | Portrait | 80×28 px | ✅ |
+| 1920×1080 | Landscape | 120×42 px | ✅ |
+| 1080×1920 | Portrait | 120×42 px | ✅ |
+
+## Project Structure
+
+```
+gemini-veo-watermark-remover/
+├── bin/                     # CLI entrypoint (vwr)
+├── src/
+│   ├── core/
+│   │   ├── blendModes.js        # Shared reverse alpha blending algorithm
+│   │   ├── veoConfig.js         # Veo watermark position catalog
+│   │   ├── embeddedAlphaMaps.js # Veo alpha map registry
+│   │   ├── frameProcessor.js    # Per-frame video processing
+│   │   └── gemini/              # Gemini image watermark module
+│   │       ├── geminiConfig.js      # Size/position detection
+│   │       ├── geminiAlphaMaps.js   # Alpha map management
+│   │       ├── imageProcessor.js    # Image processing pipeline
+│   │       └── index.js            # Re-exports
+│   ├── video/
+│   │   ├── videoDecoder.js      # WebCodecs + ffmpeg.wasm decoder
+│   │   ├── videoEncoder.js      # mp4-muxer + ffmpeg.wasm encoder
+│   │   └── pipeline.js          # Full video pipeline
+│   ├── sdk/
+│   │   ├── index.js             # Universal entry point
+│   │   ├── browser.js           # Browser API
+│   │   └── node.js              # Node.js file-system API
+│   ├── cli/
+│   │   └── vwrCli.js            # CLI implementation
+│   ├── extension/               # Chrome Extension (Manifest V3)
+│   └── userscript/              # Tampermonkey userscript
+├── dist/                        # Build output
+├── build.js                     # esbuild build script
+└── package.json
+```
 
 ## Development
 
@@ -105,146 +184,28 @@ node build.js
 node build.js --watch
 ```
 
-## SDK Usage
-
-The package exposes multiple entry points:
-
-```js
-// Universal (auto-detects environment)
-import { processVideo, createFrameProcessor } from 'gemini-veo-watermark-remover';
-
-// Browser-specific (prefers WebCodecs)
-import { processVideoFile } from 'gemini-veo-watermark-remover/browser';
-
-// Node.js-specific (file system API)
-import { processVideoFile } from 'gemini-veo-watermark-remover/node';
-```
-
-Core utilities for advanced use:
-
-```js
-import {
-  removeWatermark,
-  createFrameProcessor,
-  getVeoWatermarkInfo,
-  registerAlphaMap,
-} from 'gemini-veo-watermark-remover';
-
-// Process a single frame
-const processor = createFrameProcessor(1920, 1080);
-const result = processor.process(imageData);
-console.log(result.processed); // true
-```
-
-## How Veo Watermark Removal Works
-
-### The Veo Watermarking Process
-
-Veo applies watermarks using standard alpha compositing:
-
-```
-watermarked = α · logo + (1 - α) · original
-```
-
-Where:
-- `watermarked`: The pixel value with the watermark
-- `α`: The Alpha channel value (0.0 – 1.0)
-- `logo`: The watermark color value (White = 255)
-- `original`: The raw, original pixel value we want to recover
-
-### The Reverse Solution
-
-To remove the watermark, we solve for `original`:
-
-```
-original = (watermarked - α · logo) / (1 - α)
-```
-
-By calibrating the exact Alpha map from known Veo video outputs, we reconstruct the original pixels with zero loss — applied to every frame in the video.
-
-## Supported Resolutions
-
-| Resolution | Orientation | Watermark Size | Status |
-|-----------|-------------|----------------|--------|
-| 1280×720  | Landscape   | 80×28 px       | ✅ |
-| 720×1280  | Portrait    | 80×28 px       | ✅ |
-| 1920×1080 | Landscape   | 120×42 px      | ✅ |
-| 1080×1920 | Portrait    | 120×42 px      | ✅ |
-
-## Project Structure
-
-```
-gemini-veo-watermark-remover/
-├── bin/
-│   └── vwr.mjs              # CLI entry point
-├── src/
-│   ├── core/
-│   │   ├── blendModes.js        # Reverse alpha blending algorithm
-│   │   ├── veoConfig.js         # Watermark position catalog
-│   │   ├── embeddedAlphaMaps.js # Pre-calibrated alpha maps
-│   │   └── frameProcessor.js    # Per-frame processing orchestrator
-│   ├── video/
-│   │   ├── videoDecoder.js      # Decode abstraction (WebCodecs + ffmpeg.wasm)
-│   │   ├── videoEncoder.js      # Encode abstraction (mp4-muxer + ffmpeg.wasm)
-│   │   └── pipeline.js          # Full decode→process→encode pipeline
-│   ├── sdk/
-│   │   ├── index.js             # Universal entry point
-│   │   ├── browser.js           # Browser-optimized API
-│   │   └── node.js              # Node.js file-system API
-│   └── cli/
-│       └── vwrCli.js            # CLI argument parsing and execution
-├── dist/                         # Build output
-├── build.js                      # esbuild build script
-└── package.json
-```
-
-## Architecture Overview
-
-- `src/core/` contains the reverse-alpha removal math, watermark position detection, and alpha map management.
-- `src/video/` implements the video decode/encode pipeline with dual backends (WebCodecs for browser, ffmpeg.wasm for Node.js).
-- `src/sdk/` provides the public API surface for universal, browser, and Node.js usage.
-- `src/cli/` and `bin/vwr.mjs` expose file-oriented local automation.
-
-## Runtime Requirements
-
-### Browser
-- Chrome 94+ / Edge 94+ (WebCodecs API)
-- ES modules, Canvas API, TypedArray (`Float32Array`, `Uint8ClampedArray`)
-
-### Node.js / CLI
-- Node.js 18+
-- ffmpeg.wasm runtime (~25MB WASM download on first use)
-
 ## Limitations
 
-- Only removes Veo visible watermarks (the semi-transparent "Veo" text in bottom-right)
-- Does not remove invisible/steganographic watermarks (e.g., SynthID)
-- Designed for Veo's current visible watermark pattern
-- Alpha maps are placeholder — full calibration requires Veo video samples (contributions welcome)
-- Video processing speed: ~2-5x real-time in browser, slower via ffmpeg.wasm
+- Only removes **visible** Gemini/Veo watermarks (logo overlay, text watermark)
+- Does **not** remove invisible SynthID or steganographic watermarks
+- Veo alpha maps are placeholder — [contribute calibrated maps](https://github.com/ACs-del/gemini-veo-watermark-remover/issues)
 
 ## Legal Disclaimer
 
-This project is released under the MIT License.
-
-The removal of watermarks may have legal implications depending on your jurisdiction and the intended use of the videos. Users are solely responsible for ensuring their use of this tool complies with applicable laws, terms of service, and intellectual property rights.
-
-The author does not condone or encourage the misuse of this tool for copyright infringement, misrepresentation, or any other unlawful purposes.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+This project is released under the MIT License. The removal of watermarks may have legal implications depending on your jurisdiction. Users are responsible for ensuring compliance with applicable laws.
 
 ## Credits
 
-This project is a JavaScript port of the [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover) by Allen Kuo ([@allenk](https://github.com/allenk)).
-
-The Reverse Alpha Blending method and calibrated watermark approach are based on the original work © 2024 AllenK (Kwyshell), licensed under MIT License.
+- Reverse Alpha Blending method based on [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool) by Allen Kuo (MIT License)
+- Veo video processing inspired by [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover)
 
 ## Related Links
 
-- [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover) — Original C++ implementation by Allen Kuo
-- [Removing Gemini AI Watermarks: A Deep Dive into Reverse Alpha Blending](https://allenkuo.medium.com/removing-gemini-ai-watermarks-a-deep-dive-into-reverse-alpha-blending-bbbd83af2a3f) — Technical writeup by the original author
-- [GargantuaX/gemini-watermark-remover](https://github.com/GargantuaX/gemini-watermark-remover) — Sister project for Gemini image watermark removal
+- [Online Tool — removegeminiwatermark.io](https://removegeminiwatermark.io)
+- [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool) — Original C/C++ implementation
+- [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover) — Original Veo CLI
+- [Reverse Alpha Blending Deep Dive](https://allenkuo.medium.com/removing-gemini-ai-watermarks-a-deep-dive-into-reverse-alpha-blending-bbbd83af2a3f)
 
 ## License
 
-[MIT License](LICENSE)
+MIT

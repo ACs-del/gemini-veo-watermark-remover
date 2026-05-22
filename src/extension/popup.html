@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 300px;
+      background: #fafafa;
+      color: #1a1a1a;
+    }
+
+    .gvwr-popup {
+      padding: 20px;
+    }
+
+    .gvwr-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .gvwr-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #4285f4, #ab47bc);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .gvwr-title {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .gvwr-subtitle {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .gvwr-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 14px;
+    }
+
+    .gvwr-toggle-label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .gvwr-toggle-status {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .gvwr-switch {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .gvwr-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .gvwr-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #ccc;
+      border-radius: 24px;
+      transition: background 0.2s;
+    }
+
+    .gvwr-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .gvwr-switch input:checked + .gvwr-slider {
+      background: #4285f4;
+    }
+
+    .gvwr-switch input:checked + .gvwr-slider::before {
+      transform: translateX(18px);
+    }
+
+    .gvwr-stats {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .gvwr-stat-card {
+      flex: 1;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .gvwr-stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #4285f4;
+    }
+
+    .gvwr-stat-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .gvwr-divider {
+      height: 1px;
+      background: #e8e8e8;
+      margin: 14px 0;
+    }
+
+    .gvwr-links {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .gvwr-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #444;
+      font-size: 12px;
+      transition: background 0.15s;
+    }
+
+    .gvwr-link:hover {
+      background: #f0f0f0;
+    }
+
+    .gvwr-link-icon {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .gvwr-link-icon svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .gvwr-footer {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 10px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="gvwr-popup">
+    <div class="gvwr-header">
+      <div class="gvwr-logo">G</div>
+      <div>
+        <div class="gvwr-title">Gemini & Veo Watermark Remover</div>
+        <div class="gvwr-subtitle">100% local processing — nothing leaves your browser</div>
+      </div>
+    </div>
+
+    <div class="gvwr-toggle-row">
+      <div>
+        <div class="gvwr-toggle-label">Auto-remove watermarks</div>
+        <div class="gvwr-toggle-status" id="gvwr-status">Enabled</div>
+      </div>
+      <label class="gvwr-switch">
+        <input type="checkbox" id="gvwr-toggle" checked>
+        <span class="gvwr-slider"></span>
+      </label>
+    </div>
+
+    <div class="gvwr-stats">
+      <div class="gvwr-stat-card">
+        <div class="gvwr-stat-value" id="gvwr-cleaned-count">0</div>
+        <div class="gvwr-stat-label">Cleaned</div>
+      </div>
+      <div class="gvwr-stat-card">
+        <div class="gvwr-stat-value" id="gvwr-session-count">0</div>
+        <div class="gvwr-stat-label">This Session</div>
+      </div>
+    </div>
+
+    <div class="gvwr-divider"></div>
+
+    <div class="gvwr-links">
+      <a class="gvwr-link" href="https://removegeminiwatermark.io" target="_blank" rel="noopener">
+        <span class="gvwr-link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </span>
+        removegeminiwatermark.io
+      </a>
+      <a class="gvwr-link" href="https://github.com/ACs-del/gemini-veo-watermark-remover" target="_blank" rel="noopener">
+        <span class="gvwr-link-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+        </span>
+        GitHub — Star & Contribute
+      </a>
+    </div>
+
+    <div class="gvwr-footer">
+      v0.1.0 · Open Source · MIT License
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
