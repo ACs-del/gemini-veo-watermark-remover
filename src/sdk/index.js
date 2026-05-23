@@ -16,5 +16,10 @@ export { createEncoder } from '../video/videoEncoder.js'
 
 // Gemini image watermark processing
 export { processImage, createImageProcessor } from '../core/gemini/imageProcessor.js'
-export { getGeminiWatermarkInfo, detectGeminiWatermarkConfig, calculateGeminiWatermarkPosition } from '../core/gemini/geminiConfig.js'
+export {
+  getGeminiWatermarkInfo,
+  detectGeminiWatermarkConfig,
+  calculateGeminiWatermarkPosition,
+  GEMINI_WATERMARK_PROFILES,
+} from '../core/gemini/geminiConfig.js'
 export { getGeminiAlphaMap, registerGeminiAlphaMap, loadAndRegisterAlphaMap, listGeminiAlphaMapKeys } from '../core/gemini/geminiAlphaMaps.js'

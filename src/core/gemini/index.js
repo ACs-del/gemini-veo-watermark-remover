@@ -8,8 +8,12 @@ export {
   detectGeminiWatermarkConfig,
   calculateGeminiWatermarkPosition,
   getGeminiWatermarkInfo,
+  GEMINI_WATERMARK_PROFILES,
   GEMINI_WATERMARK_SIZES,
   LARGE_IMAGE_THRESHOLD,
+  calculateCurrentSmallMargin,
+  getWatermarkTier,
+  normalizeGeminiProfile,
 } from './geminiConfig.js'
 
 // Alpha map management

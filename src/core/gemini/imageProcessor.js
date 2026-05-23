@@ -11,8 +11,10 @@
  */
 
 import { removeWatermark } from '../blendModes.js'
-import { getGeminiWatermarkInfo } from './geminiConfig.js'
+import { getGeminiWatermarkInfo, normalizeGeminiProfile } from './geminiConfig.js'
 import { getGeminiAlphaMap } from './geminiAlphaMaps.js'
+
+const PROFILE_ORDER = ['current', 'legacy']
 
 /**
  * Compute Normalized Cross-Correlation between an image region and the alpha map.
@@ -77,17 +79,17 @@ function computeNCC(imgData, imgW, x, y, maskAlpha, maskW, maskH, step) {
  *
  * @param {ImageData} imageData - Full image data
  * @param {{ width: number, height: number, alpha: Float32Array }} mask - Alpha mask info
+ * @param {{ x: number, y: number, width: number, height: number }} expectedPosition - Expected region
  * @returns {{ x: number, y: number, confidence: number }|null}
  */
-function findWatermarkPosition(imageData, mask) {
+function findWatermarkPosition(imageData, mask, expectedPosition) {
   const { width: imgW, height: imgH, data: imgData } = imageData
   const { width: maskW, height: maskH, alpha: maskAlpha } = mask
 
   let bestX = 0, bestY = 0, bestScore = -1
 
-  const margin = maskW === 96 ? 64 : 32
-  const expectedX = imgW - margin - maskW
-  const expectedY = imgH - margin - maskH
+  const expectedX = expectedPosition?.x ?? (imgW - maskW)
+  const expectedY = expectedPosition?.y ?? (imgH - maskH)
   const searchRadius = Math.max(16, Math.round(maskW * 0.75))
   const searchStartX = Math.max(0, expectedX - searchRadius)
   const searchStartY = Math.max(0, expectedY - searchRadius)
@@ -119,37 +121,35 @@ function findWatermarkPosition(imageData, mask) {
   return bestScore >= 0.5 ? { x: bestX, y: bestY, confidence: bestScore } : null
 }
 
-/**
- * Process a single image to remove the Gemini watermark.
- *
- * @param {ImageData} imageData - The watermarked image (mutated in place)
- * @param {{ skipDetection?: boolean, forcePosition?: { x: number, y: number } }} options
- * @returns {{ imageData: ImageData, processed: boolean, confidence: number, position: { x: number, y: number, width: number, height: number }|null, reason?: string }}
- */
-export function processImage(imageData, options = {}) {
+function getProfilesToTry(profile) {
+  if (!profile || profile === 'auto') return PROFILE_ORDER
+  return [normalizeGeminiProfile(profile)]
+}
+
+function emptyResult(imageData, reason, attemptedProfiles, profile = null) {
+  return {
+    imageData,
+    processed: false,
+    confidence: 0,
+    position: null,
+    reason,
+    profile,
+    attemptedProfiles,
+  }
+}
+
+function processImageWithProfile(imageData, options, profile) {
   const { width, height } = imageData
   const { skipDetection = false, forcePosition } = options
 
-  const info = getGeminiWatermarkInfo(width, height)
+  const info = getGeminiWatermarkInfo(width, height, profile)
   if (!info) {
-    return {
-      imageData,
-      processed: false,
-      confidence: 0,
-      position: null,
-      reason: 'image_too_small',
-    }
+    return emptyResult(imageData, 'image_too_small', [profile], profile)
   }
 
   const alphaMapEntry = getGeminiAlphaMap(info.alphaMapKey)
   if (!alphaMapEntry) {
-    return {
-      imageData,
-      processed: false,
-      confidence: 0,
-      position: null,
-      reason: 'missing_alpha_map',
-    }
+    return emptyResult(imageData, 'missing_alpha_map', [profile], profile)
   }
 
   let position
@@ -174,15 +174,9 @@ export function processImage(imageData, options = {}) {
       alpha: alphaMapEntry.data,
     }
 
-    const match = findWatermarkPosition(imageData, mask)
+    const match = findWatermarkPosition(imageData, mask, info.position)
     if (!match) {
-      return {
-        imageData,
-        processed: false,
-        confidence: 0,
-        position: null,
-        reason: 'watermark_not_detected',
-      }
+      return emptyResult(imageData, 'watermark_not_detected', [profile], profile)
     }
 
     confidence = match.confidence
@@ -202,6 +196,38 @@ export function processImage(imageData, options = {}) {
     processed: true,
     confidence,
     position,
+    profile,
+    attemptedProfiles: [profile],
+  }
+}
+
+/**
+ * Process a single image to remove the Gemini watermark.
+ *
+ * @param {ImageData} imageData - The watermarked image (mutated in place)
+ * @param {{ skipDetection?: boolean, forcePosition?: { x: number, y: number }, profile?: 'auto'|'current'|'legacy'|'v1'|'v2' }} options
+ * @returns {{ imageData: ImageData, processed: boolean, confidence: number, position: { x: number, y: number, width: number, height: number }|null, profile: string|null, attemptedProfiles: string[], reason?: string }}
+ */
+export function processImage(imageData, options = {}) {
+  const profile = options.profile ?? 'auto'
+  const profilesToTry = getProfilesToTry(profile)
+  const attemptedProfiles = []
+  let lastResult = null
+
+  for (const activeProfile of profilesToTry) {
+    attemptedProfiles.push(activeProfile)
+    const result = processImageWithProfile(imageData, options, activeProfile)
+    result.attemptedProfiles = [...attemptedProfiles]
+
+    if (result.processed) return result
+    lastResult = result
+
+    if (result.reason !== 'watermark_not_detected') break
+  }
+
+  return {
+    ...(lastResult || emptyResult(imageData, 'watermark_not_detected', attemptedProfiles)),
+    attemptedProfiles,
   }
 }
 
@@ -215,13 +241,17 @@ export function processImage(imageData, options = {}) {
  */
 export function createImageProcessor(targetWidth, targetHeight) {
   // If dimensions are pre-specified, cache the lookup
-  let cachedInfo = null
-  let cachedAlphaMap = null
+  const cachedByProfile = new Map()
 
   if (targetWidth && targetHeight) {
-    cachedInfo = getGeminiWatermarkInfo(targetWidth, targetHeight)
-    if (cachedInfo) {
-      cachedAlphaMap = getGeminiAlphaMap(cachedInfo.alphaMapKey)
+    for (const profile of PROFILE_ORDER) {
+      const info = getGeminiWatermarkInfo(targetWidth, targetHeight, profile)
+      if (info) {
+        cachedByProfile.set(profile, {
+          info,
+          alphaMap: getGeminiAlphaMap(info.alphaMapKey),
+        })
+      }
     }
   }
 
@@ -229,41 +259,42 @@ export function createImageProcessor(targetWidth, targetHeight) {
     /**
      * Process an image to remove the Gemini watermark.
      * @param {ImageData} imageData
-     * @param {{ skipDetection?: boolean, forcePosition?: { x: number, y: number } }} options
+     * @param {{ skipDetection?: boolean, forcePosition?: { x: number, y: number }, profile?: 'auto'|'current'|'legacy'|'v1'|'v2' }} options
      */
     process(imageData, options = {}) {
       // Use cached config if dimensions match, otherwise dynamic lookup
-      if (cachedInfo && imageData.width === targetWidth && imageData.height === targetHeight) {
-        if (!cachedAlphaMap) {
-          return {
-            imageData,
-            processed: false,
-            confidence: 0,
-            position: null,
-            reason: 'missing_alpha_map',
+      if (cachedByProfile.size > 0 && imageData.width === targetWidth && imageData.height === targetHeight) {
+        const profilesToTry = getProfilesToTry(options.profile ?? 'auto')
+        const attemptedProfiles = []
+        let lastResult = null
+
+        for (const profile of profilesToTry) {
+          attemptedProfiles.push(profile)
+          const cached = cachedByProfile.get(profile)
+
+          if (!cached?.info) {
+            lastResult = emptyResult(imageData, 'image_too_small', [...attemptedProfiles], profile)
+            break
           }
+
+          if (!cached.alphaMap) {
+            lastResult = emptyResult(imageData, 'missing_alpha_map', [...attemptedProfiles], profile)
+            break
+          }
+
+          const result = processImageWithProfile(imageData, options, profile)
+          result.attemptedProfiles = [...attemptedProfiles]
+
+          if (result.processed) return result
+          lastResult = result
+
+          if (result.reason !== 'watermark_not_detected') break
         }
 
-        const { skipDetection = false, forcePosition } = options
-        let position
-        let confidence = 1.0
-
-        if (forcePosition) {
-          position = { x: forcePosition.x, y: forcePosition.y, width: cachedInfo.size, height: cachedInfo.size }
-        } else if (skipDetection) {
-          position = cachedInfo.position
-        } else {
-          const mask = { width: cachedAlphaMap.width, height: cachedAlphaMap.height, alpha: cachedAlphaMap.data }
-          const match = findWatermarkPosition(imageData, mask)
-          if (!match) {
-            return { imageData, processed: false, confidence: 0, position: null, reason: 'watermark_not_detected' }
-          }
-          confidence = match.confidence
-          position = { x: match.x, y: match.y, width: cachedAlphaMap.width, height: cachedAlphaMap.height }
+        return {
+          ...(lastResult || emptyResult(imageData, 'watermark_not_detected', attemptedProfiles)),
+          attemptedProfiles,
         }
-
-        removeWatermark(imageData, cachedAlphaMap.data, position)
-        return { imageData, processed: true, confidence, position }
       }
 
       // Fallback to full dynamic processing

@@ -8,11 +8,11 @@ export { removeWatermark } from '../core/blendModes.js'
 export { processFrame, createFrameProcessor } from '../core/frameProcessor.js'
 export { getVeoWatermarkInfo } from '../core/veoConfig.js'
 export { getEmbeddedAlphaMap, registerAlphaMap } from '../core/embeddedAlphaMaps.js'
-export { processVideo } from '../video/pipeline.js'
+export { processVideo } from '../video/pipeline.browser.js'
 
 // Gemini image exports
 export { processImage, createImageProcessor } from '../core/gemini/imageProcessor.js'
-export { getGeminiWatermarkInfo } from '../core/gemini/geminiConfig.js'
+export { getGeminiWatermarkInfo, GEMINI_WATERMARK_PROFILES } from '../core/gemini/geminiConfig.js'
 export { getGeminiAlphaMap, registerGeminiAlphaMap } from '../core/gemini/geminiAlphaMaps.js'
 
 /**
@@ -23,7 +23,7 @@ export { getGeminiAlphaMap, registerGeminiAlphaMap } from '../core/gemini/gemini
  * @returns {Promise<Blob>} Processed MP4 blob
  */
 export async function processVideoFile(file, options = {}) {
-  const { processVideo } = await import('../video/pipeline.js')
+  const { processVideo } = await import('../video/pipeline.browser.js')
   return processVideo(file, { environment: 'browser', ...options })
 }
 
@@ -37,11 +37,11 @@ export { processFrame as processImageFrame } from '../core/frameProcessor.js'
  * Handles Canvas decoding, processing, and re-encoding automatically.
  *
  * @param {File|Blob} file - Image file (PNG, JPEG, WebP, etc.)
- * @param {{ quality?: number, format?: string, skipDetection?: boolean }} options
- * @returns {Promise<{ blob: Blob, width: number, height: number, detected: boolean, confidence: number, status: string }>}
+ * @param {{ quality?: number, format?: string, skipDetection?: boolean, profile?: 'auto'|'current'|'legacy'|'v1'|'v2' }} options
+ * @returns {Promise<{ blob: Blob, width: number, height: number, detected: boolean, confidence: number, status: string, profile?: string|null, attemptedProfiles?: string[] }>}
  */
 export async function removeGeminiWatermark(file, options = {}) {
-  const { quality = 0.95, format = 'image/png', skipDetection = false } = options
+  const { quality = 0.95, format = 'image/png', skipDetection = false, profile = 'auto' } = options
 
   // Decode image file to ImageData via Canvas
   const bitmap = await createImageBitmap(file)
@@ -56,7 +56,7 @@ export async function removeGeminiWatermark(file, options = {}) {
 
   // Process the image
   const { processImage } = await import('../core/gemini/imageProcessor.js')
-  const result = processImage(imageData, { skipDetection })
+  const result = processImage(imageData, { skipDetection, profile })
 
   if (!result.processed) {
     return {
@@ -66,6 +66,8 @@ export async function removeGeminiWatermark(file, options = {}) {
       detected: false,
       confidence: 0,
       status: result.reason || 'not_processed',
+      profile: result.profile,
+      attemptedProfiles: result.attemptedProfiles,
     }
   }
 
@@ -80,5 +82,7 @@ export async function removeGeminiWatermark(file, options = {}) {
     detected: true,
     confidence: result.confidence,
     status: 'success',
+    profile: result.profile,
+    attemptedProfiles: result.attemptedProfiles,
   }
 }

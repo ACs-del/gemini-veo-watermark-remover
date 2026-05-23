@@ -1,7 +1,7 @@
 {
   "name": "gemini-veo-watermark-remover",
   "version": "0.1.0",
-  "description": "Remove Gemini image and Veo video watermarks using mathematically precise reverse alpha blending. 100% client-side, open source.",
+  "description": "Remove Gemini 3.5+/legacy image watermarks and Veo video watermarks locally with reverse alpha blending. Browser, CLI, SDK, extension, userscript.",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {

@@ -3,8 +3,8 @@
  * Orchestrates: decode → per-frame watermark removal → encode.
  */
 
-import { createDecoder } from './videoDecoder.js';
-import { createEncoder } from './videoEncoder.js';
+import { createDecoder, createNodeDecoder } from './videoDecoder.js';
+import { createEncoder, createNodeEncoder } from './videoEncoder.js';
 import { createFrameProcessor } from '../core/frameProcessor.js';
 
 /**
@@ -24,15 +24,16 @@ import { createFrameProcessor } from '../core/frameProcessor.js';
 export async function processVideo(input, options = {}) {
   const { environment = 'auto', bitrate, onProgress } = options;
 
-  // 1. Decode
-  const decoder = createDecoder(environment);
+  const useNode =
+    environment === 'node' ||
+    (environment === 'auto' && typeof VideoDecoder === 'undefined');
+
+  const decoder = useNode ? await createNodeDecoder() : createDecoder(environment);
   const videoInfo = await decoder.open(input);
 
-  // 2. Setup frame processor
   const processor = createFrameProcessor(videoInfo.width, videoInfo.height);
 
-  // 3. Setup encoder
-  const encoder = createEncoder(environment);
+  const encoder = useNode ? await createNodeEncoder() : createEncoder(environment);
   await encoder.init({
     width: videoInfo.width,
     height: videoInfo.height,

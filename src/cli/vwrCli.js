@@ -32,6 +32,8 @@ Options:
   --format, -f     Output format for images (png, jpeg, webp) [default: same as input]
   --quality, -q    Output quality for lossy formats (0-100) [default: 95]
   --skip-detect    Skip NCC detection, use expected position directly
+  --legacy         Use legacy Gemini profile only (pre-Gemini 3.5)
+  --no-legacy      Use current Gemini 3.5+ profile only, no fallback
   --json           Output result as JSON
   --verbose        Show detailed progress
   --help, -h       Show this help
@@ -45,6 +47,14 @@ Examples:
   vwr remove image.jpg -o clean.png --format png
   vwr remove video.mp4
   vwr remove video.mp4 -o clean.mp4 --verbose
+  vwr remove old-gemini.png --legacy
+  vwr remove image.jpg --no-legacy
+  vwr remove image.jpg --json  # machine-readable output
+
+Exit codes:
+  0  Processed successfully
+  1  Single image skipped because no watermark was detected
+  2  Real failure, such as bad args, IO error, or conflicting flags
 `
 
 /**
@@ -77,8 +87,8 @@ function getOutputExtension(inputExt, formatOverride) {
  * Process an image file using the Gemini engine.
  * @param {string} inputPath
  * @param {string} outputPath
- * @param {{ skipDetection?: boolean, verbose?: boolean }} options
- * @returns {Promise<{ width: number, height: number, detected: boolean, confidence: number }>}
+ * @param {{ skipDetection?: boolean, verbose?: boolean, profile?: 'auto'|'current'|'legacy' }} options
+ * @returns {Promise<{ width: number, height: number, detected: boolean, skipped: boolean, confidence: number, profile: string|null, attemptedProfiles: string[] }>}
  */
 async function processImageFile(inputPath, outputPath, options = {}) {
   const { processImage } = await import('../core/gemini/imageProcessor.js')
@@ -107,15 +117,20 @@ async function processImageFile(inputPath, outputPath, options = {}) {
   }
 
   // Process
-  const result = processImage(imageData, { skipDetection: options.skipDetection })
+  const result = processImage(imageData, {
+    skipDetection: options.skipDetection,
+    profile: options.profile ?? 'auto',
+  })
 
   if (options.verbose) {
     if (result.processed) {
       console.log(`  Watermark detected at (${result.position.x}, ${result.position.y})`)
       console.log(`  Confidence: ${(result.confidence * 100).toFixed(1)}%`)
       console.log(`  Region: ${result.position.width}×${result.position.height}`)
+      console.log(`  Profile: ${result.profile}`)
     } else {
       console.log(`  Not processed: ${result.reason}`)
+      console.log(`  Profiles tried: ${(result.attemptedProfiles || []).join(', ')}`)
     }
   }
 
@@ -123,7 +138,15 @@ async function processImageFile(inputPath, outputPath, options = {}) {
     // Copy file unchanged if no watermark detected
     const inputData = await readFile(inputPath)
     await writeFile(outputPath, inputData)
-    return { width, height, detected: false, confidence: 0 }
+    return {
+      width,
+      height,
+      detected: false,
+      skipped: true,
+      confidence: 0,
+      profile: result.profile,
+      attemptedProfiles: result.attemptedProfiles || [],
+    }
   }
 
   // Encode output using sharp
@@ -149,7 +172,10 @@ async function processImageFile(inputPath, outputPath, options = {}) {
     width,
     height,
     detected: true,
+    skipped: false,
     confidence: result.confidence,
+    profile: result.profile,
+    attemptedProfiles: result.attemptedProfiles || [],
   }
 }
 
@@ -162,7 +188,7 @@ export async function main(argv = process.argv.slice(2)) {
   const command = argv[0]
   if (command !== 'remove') {
     console.error(`Unknown command: ${command}\nRun "vwr --help" for usage.`)
-    process.exit(1)
+    process.exit(2)
   }
 
   const { values, positionals } = parseArgs({
@@ -173,28 +199,42 @@ export async function main(argv = process.argv.slice(2)) {
       format: { type: 'string', short: 'f' },
       quality: { type: 'string', short: 'q' },
       'skip-detect': { type: 'boolean', default: false },
+      legacy: { type: 'boolean', default: false },
+      'no-legacy': { type: 'boolean', default: false },
       json: { type: 'boolean', default: false },
       verbose: { type: 'boolean', default: false },
     },
     allowPositionals: true,
   })
 
+  if (values.legacy && values['no-legacy']) {
+    if (values.json) {
+      console.log(JSON.stringify({
+        success: false,
+        error: 'Cannot specify both --legacy and --no-legacy',
+      }))
+    } else {
+      console.error('Error: Cannot specify both --legacy and --no-legacy')
+    }
+    process.exit(2)
+  }
+
   const inputFile = positionals[0]
   if (!inputFile) {
     console.error('Error: No input file specified.\nUsage: vwr remove <input>')
-    process.exit(1)
+    process.exit(2)
   }
 
   const inputPath = resolve(inputFile)
   if (!existsSync(inputPath)) {
     console.error(`Error: File not found: ${inputPath}`)
-    process.exit(1)
+    process.exit(2)
   }
 
   const fileType = detectFileType(inputPath)
   if (fileType === 'unknown') {
     console.error(`Error: Unsupported file type: ${extname(inputPath)}\nSupported: ${[...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS].join(', ')}`)
-    process.exit(1)
+    process.exit(2)
   }
 
   // Determine output path
@@ -209,10 +249,15 @@ export async function main(argv = process.argv.slice(2)) {
 
   if (existsSync(outputPath) && !values.overwrite) {
     console.error(`Error: Output file already exists: ${outputPath}\nUse --overwrite to replace.`)
-    process.exit(1)
+    process.exit(2)
   }
 
   const quality = values.quality ? parseInt(values.quality, 10) : 95
+  const profile = values.legacy
+    ? 'legacy'
+    : values['no-legacy']
+      ? 'current'
+      : 'auto'
 
   try {
     const startTime = Date.now()
@@ -226,19 +271,23 @@ export async function main(argv = process.argv.slice(2)) {
         skipDetection: values['skip-detect'],
         verbose: values.verbose,
         quality,
+        profile,
       })
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
 
       if (values.json) {
         console.log(JSON.stringify({
-          success: true,
+          success: result.detected,
           type: 'image',
           input: inputPath,
           output: outputPath,
           width: result.width,
           height: result.height,
           detected: result.detected,
+          skipped: result.skipped,
           confidence: result.confidence,
+          profile: result.profile,
+          attemptedProfiles: result.attemptedProfiles,
           elapsed: parseFloat(elapsed),
         }))
       } else {
@@ -247,6 +296,9 @@ export async function main(argv = process.argv.slice(2)) {
         } else {
           console.log(`⚠ No watermark detected, file copied unchanged → ${outputPath}`)
         }
+      }
+      if (!result.detected) {
+        process.exitCode = 1
       }
     } else {
       // Video processing (existing Veo logic)
@@ -269,6 +321,8 @@ export async function main(argv = process.argv.slice(2)) {
           input: inputPath,
           output: outputPath,
           size: result.size,
+          detected: true,
+          skipped: false,
           elapsed: parseFloat(elapsed),
         }))
       } else {
@@ -282,6 +336,6 @@ export async function main(argv = process.argv.slice(2)) {
     } else {
       console.error(`\nError: ${err.message}`)
     }
-    process.exit(1)
+    process.exit(2)
   }
 }

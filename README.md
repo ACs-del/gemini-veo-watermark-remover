@@ -1,6 +1,8 @@
 # Gemini & Veo Watermark Remover — Lossless Watermark Removal Tool
 
-An open-source tool to remove **Gemini image watermarks** and **Veo video watermarks** from AI-generated content with pixel-perfect, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact **Reverse Alpha Blending** algorithm instead of unpredictable AI inpainting.
+An open-source tool to remove **Gemini 3.5+/legacy image watermarks** and **Veo video watermarks** from AI-generated content with pixel-perfect, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact **Reverse Alpha Blending** algorithm instead of unpredictable AI inpainting.
+
+🆕 **Gemini 3.5+ support** — the image engine targets the current Gemini profile by default and automatically falls back to the legacy pre-3.5 profile when no watermark is detected.
 
 🚀 **Looking for the `Online Watermark Remover`?** Try [removegeminiwatermark.io](https://removegeminiwatermark.io) — free, no install, works directly in your browser.
 
@@ -9,6 +11,7 @@ An open-source tool to remove **Gemini image watermarks** and **Veo video waterm
 ## Features
 
 - ✅ **Gemini + Veo** — First tool to handle both Gemini image and Veo video watermarks
+- ✅ **Gemini 3.5+ + Legacy** — Current 36×36/96×96 Gemini profile with automatic legacy fallback.
 - ✅ **100% Local Processing** — All processing happens locally. Nothing is uploaded.
 - ✅ **Mathematical Precision** — Reverse Alpha Blending formula, not AI hallucination.
 - ✅ **Auto-Detection** — NCC template matching identifies watermark size and position.
@@ -61,6 +64,8 @@ npm i -g gemini-veo-watermark-remover
 vwr remove image.png -o clean.png
 vwr remove video.mp4 --verbose
 vwr remove image.jpg --json  # machine-readable output
+vwr remove old-gemini.png --legacy
+vwr remove image.jpg --no-legacy
 ```
 
 Supported formats:
@@ -116,9 +121,28 @@ By calibrating the exact Alpha map from known outputs, we reconstruct the origin
 
 ### Detection
 
-1. **Size catalog lookup** — matches image dimensions to predict watermark size (48×48 or 96×96 for Gemini).
+1. **Profile catalog lookup** — matches image dimensions to predict the current Gemini 3.5+ watermark profile first, then legacy when needed.
 2. **NCC template matching** — Normalized Cross-Correlation search in the bottom-right region.
 3. **Confidence threshold** — only applies removal when detection confidence ≥ 50%.
+
+### Gemini 3.5+ Profile Support
+
+Starting with Gemini 3.5, Google shifted the visible image watermark position and changed the small alpha map. The default image pipeline now tries the current profile first; if detection skips, it retries the legacy profile before reporting that no watermark was found.
+
+| CLI usage | First attempt | Fallback | Use case |
+| --- | --- | --- | --- |
+| `vwr remove image.png` | Current / V2 | Legacy / V1 | Default for mixed folders |
+| `vwr remove image.png --legacy` | Legacy / V1 | — | Pre-Gemini 3.5 outputs |
+| `vwr remove image.png --no-legacy` | Current / V2 | — | Strict Gemini 3.5+ only |
+| `vwr remove image.png --legacy --no-legacy` | — | — | Conflict, exits 2 |
+
+Exit codes:
+
+| Code | Meaning |
+| --- | --- |
+| `0` | Processed successfully, or a video/batch run completed without real errors |
+| `1` | Single image skipped because no watermark was detected on any tried profile |
+| `2` | Real failure, such as bad args, conflicting flags, IO, decode, or encode error |
 
 ## Supported Formats
 
@@ -126,8 +150,10 @@ By calibrating the exact Alpha map from known outputs, we reconstruct the origin
 
 | Condition | Watermark Size | Right Margin | Bottom Margin |
 | --- | --- | --- | --- |
-| Larger outputs (>1024px) | 96×96 | 64px | 64px |
-| Smaller outputs (≤1024px) | 48×48 | 32px | 32px |
+| Current / V2 large (>1024px on both axes) | 96×96 | 192px | 192px |
+| Current / V2 small | 36×36 | Aspect-aware | Aspect-aware |
+| Legacy / V1 large (>1024px on both axes) | 96×96 | 64px | 64px |
+| Legacy / V1 small | 48×48 | 32px | 32px |
 
 ### Veo Video Watermarks
 

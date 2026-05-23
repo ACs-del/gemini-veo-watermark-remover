@@ -19,14 +19,22 @@ const configs = [
     platform: 'node',
     external: ['@ffmpeg/ffmpeg', '@ffmpeg/util', 'mp4box'],
   },
-  // Browser SDK (ESM)
+  // Browser SDK (ESM) — WebCodecs only, no ffmpeg
   {
     ...common,
     entryPoints: ['src/sdk/browser.js'],
     outfile: 'dist/browser.js',
     format: 'esm',
     platform: 'browser',
-    external: ['mp4box', 'mp4-muxer', 'node:fs/promises', 'canvas', 'sharp'],
+    external: [
+      'mp4box',
+      'mp4-muxer',
+      '@ffmpeg/ffmpeg',
+      '@ffmpeg/util',
+      'node:fs/promises',
+      'canvas',
+      'sharp',
+    ],
   },
   // Node SDK
   {

@@ -5,9 +5,9 @@
  * represents how strongly the white watermark overlay affects that pixel.
  * These are derived from PNG files where RGB brightness = alpha intensity.
  *
- * Two sizes are supported:
- * - 48×48 for images ≤ 1024px in both dimensions
- * - 96×96 for larger images
+ * Current and legacy Gemini profiles are supported:
+ * - current/V2: 36×36 small, 96×96 large
+ * - legacy/V1: 48×48 small, 96×96 large
  */
 
 const geminiAlphaMapRegistry = new Map()
@@ -146,6 +146,8 @@ export async function loadAlphaMapFromPNG(source, size) {
 
 // Pre-register placeholder alpha maps with sparkle pattern
 const GEMINI_ALPHA_MAP_SIZES = [
+  { key: 'gemini-v2-36', size: 36 },
+  { key: 'gemini-v2-96', size: 96 },
   { key: 'gemini-48', size: 48 },
   { key: 'gemini-96', size: 96 },
 ]
@@ -162,7 +164,7 @@ for (const { key, size } of GEMINI_ALPHA_MAP_SIZES) {
 /**
  * Get a Gemini alpha map by size key.
  *
- * @param {string} key - 'gemini-48' or 'gemini-96'
+ * @param {string} key - 'gemini-v2-36', 'gemini-v2-96', 'gemini-48', or 'gemini-96'
  * @returns {{ data: Float32Array, width: number, height: number, source: string }|null}
  */
 export function getGeminiAlphaMap(key) {
@@ -172,7 +174,7 @@ export function getGeminiAlphaMap(key) {
 /**
  * Register a calibrated alpha map (replaces placeholder).
  *
- * @param {string} key - Map key ('gemini-48' or 'gemini-96')
+ * @param {string} key - Map key ('gemini-v2-36', 'gemini-v2-96', 'gemini-48', or 'gemini-96')
  * @param {Float32Array} data - Alpha values (size × size)
  * @param {number} size - Width/height
  * @param {string} [source='custom'] - Data source identifier
