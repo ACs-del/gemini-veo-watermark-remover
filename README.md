@@ -1,3 +1,7 @@
+[中文文档](README_zh.md)
+
+> 🔥 Building AI image/video workflows? Vylio's full toolkit is coming to [vylio.ai](https://vylio.ai).
+
 # Gemini & Veo Watermark Remover — Lossless Watermark Removal Tool
 
 An open-source tool to remove **Gemini 3.5+/legacy image watermarks** and **Veo video watermarks** from AI-generated content with pixel-perfect, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact **Reverse Alpha Blending** algorithm instead of unpredictable AI inpainting.
@@ -7,6 +11,17 @@ An open-source tool to remove **Gemini 3.5+/legacy image watermarks** and **Veo 
 🚀 **Looking for the `Online Watermark Remover`?** Try [removegeminiwatermark.io](https://removegeminiwatermark.io) today. Vylio's full AI image/video toolkit is coming to [vylio.ai](https://vylio.ai).
 
 💡 **Need to remove other AI watermarks?** Try our general-purpose AI watermark remover (coming soon).
+
+<p align="center">
+  <a href="https://removegeminiwatermark.io/"><img src="https://img.shields.io/badge/🛠️_Online_Tool-removegeminiwatermark.io-blue?style=for-the-badge" alt="Online Tool"></a>&nbsp;
+  <a href="https://www.npmjs.com/package/@vylio/gemini-veo-watermark-remover"><img src="https://img.shields.io/badge/📦_npm-@vylio%2Fgemini--veo--watermark--remover-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
+  <a href="https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js"><img src="https://img.shields.io/badge/🐒_Userscript-Install-green?style=for-the-badge" alt="Userscript"></a>&nbsp;
+  <a href="https://vylio.ai"><img src="https://img.shields.io/badge/✨_Vylio-AI_Image_%26_Video_Tools-111111?style=for-the-badge" alt="Vylio"></a>
+</p>
+
+<p align="center">
+  <img src="https://count.getloli.com/@gemini-veo-watermark-remover?name=gemini-veo-watermark-remover&theme=minecraft&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400" alt="visitor counter">
+</p>
 
 ## Features
 
