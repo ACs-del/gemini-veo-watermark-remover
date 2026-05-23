@@ -1,17 +1,30 @@
 {
-  "name": "gemini-veo-watermark-remover",
+  "name": "@vylio/gemini-veo-watermark-remover",
   "version": "0.1.0",
   "description": "Remove Gemini 3.5+/legacy image watermarks and Veo video watermarks locally with reverse alpha blending. Browser, CLI, SDK, extension, userscript.",
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./browser": "./dist/browser.js",
-    "./node": "./dist/node.js",
-    "./gemini": "./dist/gemini.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    },
+    "./gemini": {
+      "types": "./dist/gemini.d.ts",
+      "import": "./dist/gemini.js"
+    }
   },
   "bin": {
-    "vwr": "./bin/vwr.mjs"
+    "vwr": "bin/vwr.mjs"
   },
   "files": [
     "dist/",
@@ -38,10 +51,10 @@
   ],
   "license": "MIT",
   "author": "ACs-del",
-  "homepage": "https://removegeminiwatermark.io",
+  "homepage": "https://vylio.ai",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ACs-del/gemini-veo-watermark-remover"
+    "url": "git+https://github.com/ACs-del/gemini-veo-watermark-remover.git"
   },
   "bugs": {
     "url": "https://github.com/ACs-del/gemini-veo-watermark-remover/issues"

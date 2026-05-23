@@ -4,7 +4,7 @@ An open-source tool to remove **Gemini 3.5+/legacy image watermarks** and **Veo 
 
 🆕 **Gemini 3.5+ support** — the image engine targets the current Gemini profile by default and automatically falls back to the legacy pre-3.5 profile when no watermark is detected.
 
-🚀 **Looking for the `Online Watermark Remover`?** Try [removegeminiwatermark.io](https://removegeminiwatermark.io) — free, no install, works directly in your browser.
+🚀 **Looking for the `Online Watermark Remover`?** Try [removegeminiwatermark.io](https://removegeminiwatermark.io) today. Vylio's full AI image/video toolkit is coming to [vylio.ai](https://vylio.ai).
 
 💡 **Need to remove other AI watermarks?** Try our general-purpose AI watermark remover (coming soon).
 
@@ -56,11 +56,11 @@ For scripting, CI, and local batch workflows:
 
 ```bash
 # Using npx (zero install)
-npx gemini-veo-watermark-remover remove image.png
-npx gemini-veo-watermark-remover remove video.mp4
+npx @vylio/gemini-veo-watermark-remover remove image.png
+npx @vylio/gemini-veo-watermark-remover remove video.mp4
 
 # Or install globally
-npm i -g gemini-veo-watermark-remover
+npm i -g @vylio/gemini-veo-watermark-remover
 vwr remove image.png -o clean.png
 vwr remove video.mp4 --verbose
 vwr remove image.jpg --json  # machine-readable output
@@ -76,7 +76,7 @@ Supported formats:
 
 ```javascript
 // Browser — remove Gemini watermark from image
-import { removeGeminiWatermark } from 'gemini-veo-watermark-remover/browser';
+import { removeGeminiWatermark } from '@vylio/gemini-veo-watermark-remover/browser';
 
 const { blob, detected, confidence } = await removeGeminiWatermark(file);
 if (detected) {
@@ -85,18 +85,18 @@ if (detected) {
 }
 
 // Browser — process Veo video
-import { processVideoFile } from 'gemini-veo-watermark-remover/browser';
+import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/browser';
 
 const cleanBlob = await processVideoFile(videoFile, {
   onProgress: (current, total) => console.log(`${current}/${total} frames`),
 });
 
 // Node.js — file-based API
-import { processVideoFile } from 'gemini-veo-watermark-remover/node';
+import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/node';
 await processVideoFile('input.mp4', 'output.mp4');
 
 // Gemini-only lightweight import (no video deps)
-import { processImage, createImageProcessor } from 'gemini-veo-watermark-remover/gemini';
+import { processImage, createImageProcessor } from '@vylio/gemini-veo-watermark-remover/gemini';
 ```
 
 ### Can't Remove Your Watermark?
@@ -228,6 +228,7 @@ This project is released under the MIT License. The removal of watermarks may ha
 ## Related Links
 
 - [Online Tool — removegeminiwatermark.io](https://removegeminiwatermark.io)
+- [Vylio — AI image & video tools](https://vylio.ai)
 - [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool) — Original C/C++ implementation
 - [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover) — Original Veo CLI
 - [Reverse Alpha Blending Deep Dive](https://allenkuo.medium.com/removing-gemini-ai-watermarks-a-deep-dive-into-reverse-alpha-blending-bbbd83af2a3f)
