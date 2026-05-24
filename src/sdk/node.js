@@ -8,7 +8,16 @@ import { processVideo } from '../video/pipeline.js';
 
 export { removeWatermark } from '../core/blendModes.js';
 export { processFrame, createFrameProcessor } from '../core/frameProcessor.js';
-export { getVeoWatermarkInfo } from '../core/veoConfig.js';
+export {
+  getVeoWatermarkInfo,
+  detectVeoWatermarkConfig,
+  calculateWatermarkPosition,
+  normalizeVideoWatermarkProfile,
+  GEMINI_DIAMOND_VIDEO_CATALOG,
+  LEGACY_VEO_TEXT_CATALOG,
+  VIDEO_WATERMARK_PROFILES,
+  VEO_WATERMARK_CATALOG,
+} from '../core/veoConfig.js';
 export { getEmbeddedAlphaMap, registerAlphaMap } from '../core/embeddedAlphaMaps.js';
 export { processVideo } from '../video/pipeline.js';
 
@@ -17,7 +26,7 @@ export { processVideo } from '../video/pipeline.js';
  *
  * @param {string} inputPath - Source video file path
  * @param {string} outputPath - Destination file path
- * @param {{ onProgress?: (current: number, total: number) => void }} options
+ * @param {{ onProgress?: (current: number, total: number) => void, videoProfile?: 'diamond'|'legacy' }} options
  */
 export async function processVideoFile(inputPath, outputPath, options = {}) {
   const inputData = await readFile(inputPath);
@@ -31,5 +40,14 @@ export async function processVideoFile(inputPath, outputPath, options = {}) {
     : result;
 
   await writeFile(outputPath, output);
-  return { inputPath, outputPath, size: output.length };
+  return {
+    inputPath,
+    outputPath,
+    size: output.length,
+    profile: result.videoProfile,
+    processedFrames: result.processedFrames,
+    skippedFrames: result.skippedFrames,
+    skipped: result.skipped,
+    reason: result.reason,
+  };
 }

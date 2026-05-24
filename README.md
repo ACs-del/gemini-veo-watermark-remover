@@ -6,7 +6,7 @@
 
 An open-source tool to **remove Gemini image watermarks and Veo video watermarks** from supported AI-generated outputs with high-fidelity, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact **Reverse Alpha Blending** algorithm instead of unpredictable AI inpainting.
 
-🆕 **Gemini 3.5+ support** — the image engine targets the current Gemini profile by default and automatically falls back to the legacy pre-3.5 profile when no watermark is detected.
+🆕 **Gemini 3.5+ support** — images target the current Gemini profile by default with legacy fallback, and videos now default to the Gemini 3.5 diamond logo profile.
 
 🚀 **Looking for the `Online Gemini & Veo Watermark Remover (Recommended)`? Try [removegeminiwatermark.io](https://removegeminiwatermark.io)** — free, no install, works directly in your browser.
 
@@ -27,6 +27,7 @@ An open-source tool to **remove Gemini image watermarks and Veo video watermarks
 
 - ✅ **Gemini + Veo** — First tool to handle both Gemini image and Veo video watermarks
 - ✅ **Gemini 3.5+ + Legacy** — Current 36×36/96×96 Gemini profile with automatic legacy fallback.
+- ✅ **Gemini 3.5 Video Diamond** — Video mode follows upstream VeoWatermarkRemover v0.5.0: diamond logo by default, old "Veo" text via `--legacy`.
 - ✅ **100% Local Processing** — All processing happens locally. Nothing is uploaded.
 - ✅ **Mathematical Precision** — Reverse Alpha Blending formula, not AI hallucination.
 - ✅ **Auto-Detection** — NCC template matching identifies watermark size and position.
@@ -38,6 +39,12 @@ An open-source tool to **remove Gemini image watermarks and Veo video watermarks
 | Original Image | Watermark Removed |
 | --- | --- |
 | ![Before](https://removegeminiwatermark.io/images/demo-before.webp) | ![After](https://removegeminiwatermark.io/images/demo-after.webp) |
+
+## What's New
+
+The video engine has been updated to follow [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo). Gemini 3.5+ video outputs now use the Gemini diamond logo instead of the old "Veo" text overlay, so `vwr remove video.mp4` targets the diamond profile by default.
+
+Older pre-Gemini-3.5 videos with the "Veo" text watermark must be processed with `--legacy`. There is no automatic fallback between video profiles because the shapes and positions differ, and applying the wrong profile can damage the frame.
 
 ## How to Remove Watermarks
 
@@ -73,11 +80,13 @@ For scripting, CI, and local batch workflows:
 # Using npx (zero install)
 npx @vylio/gemini-veo-watermark-remover remove image.png
 npx @vylio/gemini-veo-watermark-remover remove video.mp4
+npx @vylio/gemini-veo-watermark-remover remove old-veo-video.mp4 --legacy
 
 # Or install globally
 npm i -g @vylio/gemini-veo-watermark-remover
 vwr remove image.png -o clean.png
-vwr remove video.mp4 --verbose
+vwr remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
+vwr remove old-veo-video.mp4 --legacy       # old "Veo" text watermark
 vwr remove image.jpg --json  # machine-readable output
 vwr remove old-gemini.png --legacy
 vwr remove image.jpg --no-legacy
@@ -99,12 +108,15 @@ if (detected) {
   // Use cleaned image...
 }
 
-// Browser — process Veo video
+// Browser — process Gemini 3.5+ diamond video
 import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/browser';
 
 const cleanBlob = await processVideoFile(videoFile, {
   onProgress: (current, total) => console.log(`${current}/${total} frames`),
 });
+
+// Browser — process legacy "Veo" text videos
+const legacyBlob = await processVideoFile(videoFile, { videoProfile: 'legacy' });
 
 // Node.js — file-based API
 import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/node';
@@ -116,7 +128,7 @@ import { processImage, createImageProcessor } from '@vylio/gemini-veo-watermark-
 
 ### Can't Remove Your Watermark?
 
-This tool targets **Gemini's visible watermark** (logo/star overlay) and **Veo's visible text watermark**. For other types of watermarks, try our general-purpose AI watermark remover (coming soon).
+This tool targets **Gemini's visible watermark** (logo/star overlay), **Gemini 3.5+ video diamond logos**, and **legacy Veo visible text watermarks**. For other types of watermarks, try our general-purpose AI watermark remover.
 
 ## How It Works
 
@@ -151,6 +163,16 @@ Starting with Gemini 3.5, Google shifted the visible image watermark position an
 | `vwr remove image.png --no-legacy` | Current / V2 | — | Strict Gemini 3.5+ only |
 | `vwr remove image.png --legacy --no-legacy` | — | — | Conflict, exits 2 |
 
+### Gemini 3.5+ Video Profile Support
+
+Starting with Gemini 3.5, video outputs use the Gemini diamond logo in the bottom-right corner. Following upstream VeoWatermarkRemover v0.5.0, the JS video pipeline now uses diamond mode by default and keeps the older "Veo" text profile behind `--legacy`.
+
+| CLI usage | Video profile | Use case |
+| --- | --- | --- |
+| `vwr remove video.mp4` | Diamond | Gemini 3.5+ videos, currently calibrated for 1080p landscape/portrait |
+| `vwr remove old-video.mp4 --legacy` | Legacy "Veo" text | Pre-Gemini-3.5 Veo videos |
+| `vwr remove video.mp4 --no-legacy` | Diamond | Same as the default for videos |
+
 Exit codes:
 
 | Code | Meaning |
@@ -170,7 +192,15 @@ Exit codes:
 | Legacy / V1 large (>1024px on both axes) | 96×96 | 64px | 64px |
 | Legacy / V1 small | 48×48 | 32px | 32px |
 
-### Veo Video Watermarks
+### Gemini 3.5 Diamond Video Watermarks
+
+| Resolution | Orientation | Watermark Size | Status |
+| --- | --- | --- | --- |
+| 1920×1080 | Landscape | 96×96 px | ✅ |
+| 1080×1920 | Portrait | 96×96 px | ✅ |
+| 1280×720, 4K, square, other ratios | — | — | Not calibrated yet |
+
+### Legacy Veo Text Video Watermarks
 
 | Resolution | Orientation | Watermark Size | Status |
 | --- | --- | --- | --- |
@@ -229,7 +259,8 @@ node build.js --watch
 
 - Only removes **visible** Gemini/Veo watermarks (logo overlay, text watermark)
 - Does **not** remove invisible SynthID or steganographic watermarks
-- Veo alpha maps are placeholder — [contribute calibrated maps](https://github.com/ACs-del/gemini-veo-watermark-remover/issues)
+- Video alpha maps are placeholder approximations in this JS port. The upstream calibrated binary masks are not embedded; please [contribute calibrated maps](https://github.com/ACs-del/gemini-veo-watermark-remover/issues).
+- Gemini 3.5 diamond video mode is limited to 1080p landscape and portrait until more samples are calibrated.
 
 ## Legal Disclaimer
 
@@ -238,7 +269,8 @@ This project is released under the MIT License. The removal of watermarks may ha
 ## Credits
 
 - Reverse Alpha Blending method based on [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool) by Allen Kuo (MIT License)
-- Veo video processing inspired by [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover)
+- Gemini 3.5 image/video diamond profile follows [GeminiWatermarkTool v0.3.1](https://github.com/allenk/GeminiWatermarkTool/releases/tag/v0.3.1)
+- Video profile behavior follows [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)
 
 ## Related Links
 

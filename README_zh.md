@@ -6,7 +6,7 @@
 
 开源的 Gemini/Veo 水印去除工具，在已支持的 Gemini 导出图片和 Veo 导出视频上可提供高保真、可复现的去水印结果。基于纯 JavaScript 实现，使用数学精确的 **反向 Alpha 混合** 算法，而非 AI 修复。
 
-🆕 **支持 Gemini 3.5+** — 图片引擎默认优先检测当前 Gemini 水印 profile；如果未检测到，会自动回退到旧版 Gemini profile。
+🆕 **支持 Gemini 3.5+** — 图片引擎默认优先检测当前 Gemini 水印 profile；视频引擎默认处理 Gemini 3.5 的 diamond logo。
 
 🚀 **想快速去除 Gemini/Veo 水印？** 直接使用在线 Gemini & Veo 去水印工具：[removegeminiwatermark.io](https://removegeminiwatermark.io) — 免费、无需安装，浏览器即可使用。
 
@@ -27,6 +27,7 @@
 
 - ✅ **Gemini + Veo** — 同时支持 Gemini 图片水印和 Veo 视频水印。
 - ✅ **Gemini 3.5+ + 旧版** — 支持当前 36×36/96×96 Gemini profile，并自动回退旧版。
+- ✅ **Gemini 3.5 视频 diamond** — 对齐上游 VeoWatermarkRemover v0.5.0：默认处理 diamond logo，旧 `"Veo"` 文字用 `--legacy`。
 - ✅ **100% 本地处理** — 浏览器或本机处理，不上传文件。
 - ✅ **数学精确** — 基于反向 Alpha 混合公式，而不是 AI 猜测。
 - ✅ **自动检测** — 使用 NCC 模板匹配识别水印位置和尺寸。
@@ -38,6 +39,12 @@
 | 原图 | 移除后 |
 | --- | --- |
 | ![Before](https://removegeminiwatermark.io/images/demo-before.webp) | ![After](https://removegeminiwatermark.io/images/demo-after.webp) |
+
+## 最新变化
+
+视频引擎已对齐 [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)。Gemini 3.5+ 视频输出现在使用右下角 Gemini diamond logo，而不是旧版 `"Veo"` 文字，因此 `vwr remove video.mp4` 默认处理 diamond profile。
+
+旧的 pre-Gemini-3.5 `"Veo"` 文字水印视频需要显式加 `--legacy`。视频 profile 之间不会自动 fallback，因为两者形状和位置不同，错误套用会破坏画面。
 
 ## 如何移除水印
 
@@ -73,11 +80,13 @@
 # 使用 npx（零安装）
 npx @vylio/gemini-veo-watermark-remover remove image.png
 npx @vylio/gemini-veo-watermark-remover remove video.mp4
+npx @vylio/gemini-veo-watermark-remover remove old-veo-video.mp4 --legacy
 
 # 或全局安装
 npm i -g @vylio/gemini-veo-watermark-remover
 vwr remove image.png -o clean.png
-vwr remove video.mp4 --verbose
+vwr remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
+vwr remove old-veo-video.mp4 --legacy       # 旧版 "Veo" 文字水印
 vwr remove image.jpg --json
 vwr remove old-gemini.png --legacy
 vwr remove image.jpg --no-legacy
@@ -100,12 +109,15 @@ if (detected) {
   // 使用清理后的图片
 }
 
-// 浏览器：处理 Veo 视频
+// 浏览器：处理 Gemini 3.5+ diamond 视频
 import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/browser';
 
 const cleanBlob = await processVideoFile(videoFile, {
   onProgress: (current, total) => console.log(`${current}/${total} frames`),
 });
+
+// 浏览器：处理旧版 "Veo" 文字水印视频
+const legacyBlob = await processVideoFile(videoFile, { videoProfile: 'legacy' });
 
 // Node.js：文件 API
 import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/node';
@@ -120,7 +132,7 @@ import {
 
 ### 无法移除你的水印？
 
-本工具只针对 **Gemini 可见水印**（Logo / 星形叠加）和 **Veo 可见文字水印**。不可见 SynthID、隐写水印、任意第三方水印不在本工具目标范围内。
+本工具只针对 **Gemini 可见水印**（Logo / 星形叠加）、**Gemini 3.5+ 视频 diamond logo** 和 **旧版 Veo 可见文字水印**。不可见 SynthID、隐写水印、任意第三方水印不在本工具目标范围内。
 
 ## 工作原理
 
@@ -155,6 +167,16 @@ original = (watermarked - alpha * logo) / (1 - alpha)
 | `vwr remove image.png --no-legacy` | Current / V2 | — | 严格只处理 Gemini 3.5+ |
 | `vwr remove image.png --legacy --no-legacy` | — | — | 参数冲突，退出码 2 |
 
+### Gemini 3.5+ 视频 Profile 支持
+
+从 Gemini 3.5 开始，视频输出使用右下角 Gemini diamond logo。按照上游 VeoWatermarkRemover v0.5.0，本 JS 版视频管线默认使用 diamond mode，旧 `"Veo"` 文字 profile 保留在 `--legacy` 后面。
+
+| CLI 用法 | 视频 profile | 使用场景 |
+| --- | --- | --- |
+| `vwr remove video.mp4` | Diamond | Gemini 3.5+ 视频，目前只校准 1080p 横屏/竖屏 |
+| `vwr remove old-video.mp4 --legacy` | 旧版 `"Veo"` 文字 | pre-Gemini-3.5 Veo 视频 |
+| `vwr remove video.mp4 --no-legacy` | Diamond | 对视频等同默认行为 |
+
 退出码：
 
 | 代码 | 含义 |
@@ -174,7 +196,15 @@ original = (watermarked - alpha * logo) / (1 - alpha)
 | Legacy / V1 large（双轴 >1024px） | 96×96 | 64px | 64px |
 | Legacy / V1 small | 48×48 | 32px | 32px |
 
-### Veo 视频水印
+### Gemini 3.5 Diamond 视频水印
+
+| 分辨率 | 方向 | 水印尺寸 | 状态 |
+| --- | --- | --- | --- |
+| 1920×1080 | 横屏 | 96×96 px | ✅ |
+| 1080×1920 | 竖屏 | 96×96 px | ✅ |
+| 1280×720、4K、方形、其他比例 | — | — | 尚未校准 |
+
+### 旧版 Veo 文字视频水印
 
 | 分辨率 | 方向 | 水印尺寸 | 状态 |
 | --- | --- | --- | --- |
@@ -217,7 +247,8 @@ node build.js --watch
 
 - 仅移除 **可见** Gemini/Veo 水印（Logo 叠加、文字水印）
 - 不移除不可见 SynthID 或隐写水印
-- Veo Alpha maps 仍是占位校准，欢迎贡献样本和精确 maps
+- JS 版内置的视频 Alpha maps 仍是占位近似；未嵌入上游二进制中的 calibrated masks，欢迎贡献样本和精确 maps
+- Gemini 3.5 diamond 视频模式当前仅支持 1080p 横屏和竖屏
 - 视频处理依赖浏览器 WebCodecs 或 Node.js/ffmpeg.wasm 能力
 
 ## 法律声明
@@ -227,7 +258,8 @@ node build.js --watch
 ## 致谢
 
 - 反向 Alpha 混合方法基于 Allen Kuo 的 [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)（MIT License）
-- Veo 视频处理灵感来自 [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover)
+- Gemini 3.5 图片/视频 diamond profile 对齐 [GeminiWatermarkTool v0.3.1](https://github.com/allenk/GeminiWatermarkTool/releases/tag/v0.3.1)
+- 视频 profile 行为对齐 [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)
 
 ## 相关链接
 

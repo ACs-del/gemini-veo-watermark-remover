@@ -8,7 +8,16 @@ export { removeWatermark, applySyntheticWatermark } from '../core/blendModes.js'
 
 // Veo video watermark processing
 export { processFrame, createFrameProcessor } from '../core/frameProcessor.js'
-export { detectVeoWatermarkConfig, calculateWatermarkPosition, getVeoWatermarkInfo } from '../core/veoConfig.js'
+export {
+  detectVeoWatermarkConfig,
+  calculateWatermarkPosition,
+  getVeoWatermarkInfo,
+  normalizeVideoWatermarkProfile,
+  GEMINI_DIAMOND_VIDEO_CATALOG,
+  LEGACY_VEO_TEXT_CATALOG,
+  VIDEO_WATERMARK_PROFILES,
+  VEO_WATERMARK_CATALOG,
+} from '../core/veoConfig.js'
 export { getEmbeddedAlphaMap, registerAlphaMap, listAlphaMapKeys } from '../core/embeddedAlphaMaps.js'
 export { processVideo } from '../video/pipeline.js'
 export { createDecoder } from '../video/videoDecoder.js'

@@ -32,7 +32,7 @@ Options:
   --format, -f     Output format for images (png, jpeg, webp) [default: same as input]
   --quality, -q    Output quality for lossy formats (0-100) [default: 95]
   --skip-detect    Skip NCC detection, use expected position directly
-  --legacy         Use legacy Gemini profile only (pre-Gemini 3.5)
+  --legacy         Images: legacy Gemini profile only. Videos: old "Veo" text watermark
   --no-legacy      Use current Gemini 3.5+ profile only, no fallback
   --json           Output result as JSON
   --verbose        Show detailed progress
@@ -45,7 +45,8 @@ Supported formats:
 Examples:
   vwr remove image.png
   vwr remove image.jpg -o clean.png --format png
-  vwr remove video.mp4
+  vwr remove video.mp4  # Gemini 3.5+ diamond video watermark
+  vwr remove old-veo-video.mp4 --legacy
   vwr remove video.mp4 -o clean.mp4 --verbose
   vwr remove old-gemini.png --legacy
   vwr remove image.jpg --no-legacy
@@ -301,33 +302,45 @@ export async function main(argv = process.argv.slice(2)) {
         process.exitCode = 1
       }
     } else {
-      // Video processing (existing Veo logic)
+      // Video processing. Default is Gemini 3.5+ diamond; --legacy is old "Veo" text.
+      const videoProfile = values.legacy ? 'legacy' : 'diamond'
       const onProgress = values.verbose || !values.json
         ? (current, total) => {
             if (!values.json) {
               const pct = total > 0 ? Math.round((current / total) * 100) : 0
               process.stdout.write(`\rProcessing: ${current}/${total} frames (${pct}%)`)
             }
-          }
+        }
         : undefined
 
-      const result = await processVideoFile(inputPath, outputPath, { onProgress })
+      const result = await processVideoFile(inputPath, outputPath, { onProgress, videoProfile })
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
 
       if (values.json) {
         console.log(JSON.stringify({
-          success: true,
+          success: !result.skipped,
           type: 'video',
           input: inputPath,
           output: outputPath,
           size: result.size,
-          detected: true,
-          skipped: false,
+          detected: !result.skipped,
+          skipped: Boolean(result.skipped),
+          reason: result.reason || null,
+          profile: result.profile || videoProfile,
+          processedFrames: result.processedFrames || 0,
+          skippedFrames: result.skippedFrames || 0,
           elapsed: parseFloat(elapsed),
         }))
       } else {
         process.stdout.write('\n')
-        console.log(`✓ Done in ${elapsed}s → ${outputPath}`)
+        if (result.skipped) {
+          console.log(`⚠ No supported ${videoProfile} video watermark processed (${result.reason || 'not_processed'}), video encoded unchanged → ${outputPath}`)
+          if (videoProfile === 'diamond') {
+            console.log('  For pre-Gemini-3.5 videos with the old "Veo" text watermark, re-run with --legacy.')
+          }
+        } else {
+          console.log(`✓ ${videoProfile} video watermark removed in ${elapsed}s → ${outputPath}`)
+        }
       }
     }
   } catch (err) {

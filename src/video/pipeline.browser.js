@@ -10,6 +10,7 @@ import { createFrameProcessor } from '../core/frameProcessor.js';
  * @typedef {Object} ProcessOptions
  * @property {(current: number, total: number) => void} [onProgress]
  * @property {number} [bitrate]
+ * @property {'diamond'|'legacy'} [videoProfile]
  */
 
 /**
@@ -20,12 +21,12 @@ import { createFrameProcessor } from '../core/frameProcessor.js';
  * @returns {Promise<Blob>}
  */
 export async function processVideo(input, options = {}) {
-  const { bitrate, onProgress } = options;
+  const { bitrate, onProgress, videoProfile = 'diamond' } = options;
 
   const decoder = new WebCodecsDecoder();
   const videoInfo = await decoder.open(input);
 
-  const processor = createFrameProcessor(videoInfo.width, videoInfo.height);
+  const processor = createFrameProcessor(videoInfo.width, videoInfo.height, { videoProfile });
 
   const encoder = new WebCodecsEncoder();
   await encoder.init({
@@ -41,10 +42,19 @@ export async function processVideo(input, options = {}) {
   }
 
   let frameIndex = 0;
+  let processedFrames = 0;
+  let skippedFrames = 0;
+  let skipReason = null;
   const totalFrames = videoInfo.frameCount || 0;
 
   for await (const frame of decoder.decodeFrames()) {
-    processor.process(frame.imageData);
+    const frameResult = processor.process(frame.imageData);
+    if (frameResult.processed) {
+      processedFrames++;
+    } else {
+      skippedFrames++;
+      skipReason = skipReason || frameResult.reason || 'not_processed';
+    }
     await encoder.encodeFrame(frame.imageData, frame.timestamp);
 
     frameIndex++;
@@ -54,5 +64,11 @@ export async function processVideo(input, options = {}) {
   }
 
   await decoder.close();
-  return encoder.finalize();
+  const output = await encoder.finalize();
+  output.videoProfile = processor.profile;
+  output.processedFrames = processedFrames;
+  output.skippedFrames = skippedFrames;
+  output.skipped = processedFrames === 0;
+  output.reason = processedFrames === 0 ? skipReason : null;
+  return output;
 }
