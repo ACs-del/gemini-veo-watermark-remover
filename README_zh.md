@@ -1,20 +1,22 @@
 [English](README.md)
 
-> 🔥 正在构建 AI 图片/视频工作流？Vylio 完整工具平台即将上线：[vylio.ai](https://vylio.ai)
+> 🔥 厌倦了 Gemini 和 Veo 水印？试试更强大的 **GPT Image 2**：[vylio.ai](https://vylio.ai) — 限时免费。
 
-# Gemini & Veo 去水印工具 — 本地无损水印移除
+# Gemini & Veo 去水印工具 — 无损去除 AI 图片与视频水印
 
-开源工具，用于移除 **Gemini 3.5+/旧版图片水印** 和 **Veo 视频水印**。核心采用可复现的 **反向 Alpha 混合** 算法，而不是不可控的 AI 修补，因此适合在浏览器、命令行、SDK、扩展和自动化流程中使用。
+开源的 Gemini/Veo 水印去除工具，在已支持的 Gemini 导出图片和 Veo 导出视频上可提供高保真、可复现的去水印结果。基于纯 JavaScript 实现，使用数学精确的 **反向 Alpha 混合** 算法，而非 AI 修复。
 
 🆕 **支持 Gemini 3.5+** — 图片引擎默认优先检测当前 Gemini 水印 profile；如果未检测到，会自动回退到旧版 Gemini profile。
 
-🚀 **想直接在线使用？** 现在可访问 [removegeminiwatermark.io](https://removegeminiwatermark.io)。Vylio 的完整 AI 图片/视频工具平台将上线于 [vylio.ai](https://vylio.ai)。
+🚀 **想快速去除 Gemini/Veo 水印？** 直接使用在线 Gemini & Veo 去水印工具：[removegeminiwatermark.io](https://removegeminiwatermark.io) — 免费、无需安装，浏览器即可使用。
+
+💡 **需要去除其他图片或视频水印？** 试试通用 AI 去水印工具：[vylio.ai/image-watermark-remover](https://vylio.ai/image-watermark-remover)
 
 <p align="center">
   <a href="https://removegeminiwatermark.io/"><img src="https://img.shields.io/badge/🛠️_在线工具-removegeminiwatermark.io-blue?style=for-the-badge" alt="在线工具"></a>&nbsp;
   <a href="https://www.npmjs.com/package/@vylio/gemini-veo-watermark-remover"><img src="https://img.shields.io/badge/📦_npm-@vylio%2Fgemini--veo--watermark--remover-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
   <a href="https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js"><img src="https://img.shields.io/badge/🐒_用户脚本-安装-green?style=for-the-badge" alt="用户脚本"></a>&nbsp;
-  <a href="https://vylio.ai"><img src="https://img.shields.io/badge/✨_Vylio-AI图片与视频工具-111111?style=for-the-badge" alt="Vylio"></a>
+  <a href="https://vylio.ai/image-watermark-remover"><img src="https://img.shields.io/badge/🧹_通用去水印-vylio.ai-111111?style=for-the-badge" alt="通用 AI 去水印"></a>
 </p>
 
 <p align="center">
