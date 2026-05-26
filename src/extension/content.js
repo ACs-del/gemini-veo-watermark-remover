@@ -414,6 +414,7 @@ async function handleImage(img) {
     img.dataset.gvwrOriginal = img.src;
     img.src = cleanedUrl;
     img.dataset.gvwrCleaned = 'true';
+    cleanedImageMap.set(img.dataset.gvwrOriginal, cleanedUrl);
 
     addCleanedBadge(img);
 
@@ -439,25 +440,73 @@ function scanExistingImages() {
 // Download / copy interception
 // ---------------------------------------------------------------------------
 
+/** Map original image URLs to cleaned data/blob URLs for copy/download hooks. */
+const cleanedImageMap = new Map();
+
+function findSelectedImage(selection) {
+  const node = selection.anchorNode;
+  if (!node) return null;
+
+  if (node.nodeName === 'IMG') return node;
+
+  const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+  return element?.querySelector?.('img') || element?.closest?.('img') || null;
+}
+
 /**
- * Intercept right-click → "Save image as" and clipboard copy events so the
- * user always gets the cleaned version (already swapped into <img>.src).
- *
- * For programmatic download links (<a download>), we swap the href if the
- * linked image has been cleaned.
+ * Intercept copy and download so Gemini native actions return cleaned images.
  */
-function interceptDownloads() {
-  // Patch anchor clicks pointing to original (un-cleaned) URLs
+function interceptCopyDownload() {
+  document.addEventListener('copy', (e) => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const img = findSelectedImage(selection);
+    if (!img) return;
+
+    const cleanedSrc = cleanedImageMap.get(img.dataset.gvwrOriginal) || cleanedImageMap.get(img.src);
+    if (!cleanedSrc) return;
+
+    e.preventDefault();
+    fetch(cleanedSrc)
+      .then((r) => r.blob())
+      .then((blob) => {
+        const item = new ClipboardItem({ [blob.type]: blob });
+        navigator.clipboard.write([item]).catch(() => {});
+      })
+      .catch(() => {});
+  }, true);
+
   document.addEventListener('click', (e) => {
-    const anchor = e.target.closest('a[download], a[href*="googleusercontent"]');
+    const anchor = e.target.closest('a[download], a[href*="googleusercontent"], a[href*="blob:"]');
     if (!anchor) return;
 
     const href = anchor.href;
-    // Find a cleaned image whose original matches this href
-    const cleaned = document.querySelector(`img[data-gvwr-original="${CSS.escape(href)}"]`);
-    if (cleaned?.dataset.gvwrCleaned) {
-      anchor.href = cleaned.src;
+    const cleanedImg = document.querySelector(`img[data-gvwr-original="${CSS.escape(href)}"]`);
+    const cleanedSrc = cleanedImg
+      ? (cleanedImageMap.get(cleanedImg.dataset.gvwrOriginal) || cleanedImg.src)
+      : cleanedImageMap.get(href);
+
+    if (cleanedSrc) {
+      anchor.href = cleanedSrc;
+      return;
     }
+
+    const nearbyImg = anchor.closest('[class*="message"]')?.querySelector('img[data-gvwr-cleaned="true"]');
+    if (!nearbyImg) return;
+
+    const nearbyCleaned = cleanedImageMap.get(nearbyImg.dataset.gvwrOriginal);
+    if (!nearbyCleaned) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = nearbyCleaned;
+    downloadLink.download = 'gemini-image-clean.png';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
   }, true);
 }
 
@@ -516,5 +565,5 @@ chrome.runtime.onMessage.addListener((message) => {
 
   observer.observe(document.body, { childList: true, subtree: true });
 
-  interceptDownloads();
+  interceptCopyDownload();
 })();

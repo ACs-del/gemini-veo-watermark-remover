@@ -1,6 +1,6 @@
 [English](README.md)
 
-> 🔥 厌倦了 Gemini 和 Veo 水印？试试更强大的 **GPT Image 2**：[vylio.ai](https://vylio.ai) — 限时免费。
+> 🔥 厌倦了 Gemini 和 Veo 水印？试试更强大的 **GPT Image 2**：[pictx.ai](https://pictx.ai) — 限时免费。
 
 # Gemini & Veo 去水印工具 — 无损去除 AI 图片与视频水印
 
@@ -10,13 +10,13 @@
 
 🚀 **想快速去除 Gemini/Veo 水印？** 直接使用在线 Gemini & Veo 去水印工具：[removegeminiwatermark.io](https://removegeminiwatermark.io) — 免费、无需安装，浏览器即可使用。
 
-💡 **需要去除其他图片或视频水印？** 试试通用 AI 去水印工具：[vylio.ai/image-watermark-remover](https://vylio.ai/image-watermark-remover)
+💡 **需要去除其他图片或视频水印？** 试试通用 AI 去水印工具：[pictx.ai/image-watermark-remover](https://pictx.ai/image-watermark-remover)
 
 <p align="center">
   <a href="https://removegeminiwatermark.io/"><img src="https://img.shields.io/badge/🛠️_在线工具-removegeminiwatermark.io-blue?style=for-the-badge" alt="在线工具"></a>&nbsp;
-  <a href="https://www.npmjs.com/package/@vylio/gemini-veo-watermark-remover"><img src="https://img.shields.io/badge/📦_npm-@vylio%2Fgemini--veo--watermark--remover-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
+  <a href="https://www.npmjs.com/package/pictx"><img src="https://img.shields.io/badge/📦_npm-pictx-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
   <a href="https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js"><img src="https://img.shields.io/badge/🐒_用户脚本-安装-green?style=for-the-badge" alt="用户脚本"></a>&nbsp;
-  <a href="https://vylio.ai/image-watermark-remover"><img src="https://img.shields.io/badge/🧹_通用去水印-vylio.ai-111111?style=for-the-badge" alt="通用 AI 去水印"></a>
+  <a href="https://pictx.ai/image-watermark-remover"><img src="https://img.shields.io/badge/🧹_通用去水印-pictx.ai-111111?style=for-the-badge" alt="通用 AI 去水印"></a>
 </p>
 
 <p align="center">
@@ -34,6 +34,21 @@
 - ✅ **多种使用方式** — 在线工具、Chrome 扩展、用户脚本、CLI、SDK、AI Agent Skill。
 - ✅ **跨平台** — 支持现代浏览器和 Node.js 环境。
 
+## 渠道 × 媒体类型支持
+
+并非每个渠道都同时支持 Gemini **图片**与 Veo **视频**：
+
+| 渠道 | Gemini 图片 | Veo 视频 | 说明 |
+| --- | :---: | :---: | --- |
+| npm `pictx` SDK | ✅ | ✅ | `pictx/browser`、`pictx/node`、`pictx/gemini` |
+| CLI `pictx remove` | ✅ | ✅ | 目录批处理 `--out-dir` |
+| Agent Skill | ✅ | ✅ | 包装 CLI |
+| [removegeminiwatermark.io](https://removegeminiwatermark.io) | ✅ | ✅ | 浏览器上传 + WebCodecs |
+| Chrome 扩展 | ✅ | ❌ | 仅 Gemini 页面图片 |
+| 油猴脚本 | ✅ | ❌ | 仅 Gemini 页面图片 |
+
+Veo 视频请用在线工具或 `npx pictx remove video.mp4`。扩展与油猴面向聊天预览集成，不做整文件视频解码。
+
 ## 水印移除示例
 
 | 原图 | 移除后 |
@@ -42,7 +57,7 @@
 
 ## 最新变化
 
-视频引擎已对齐 [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)。Gemini 3.5+ 视频输出现在使用右下角 Gemini diamond logo，而不是旧版 `"Veo"` 文字，因此 `vwr remove video.mp4` 默认处理 diamond profile。
+视频引擎已对齐 [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)。Gemini 3.5+ 视频输出现在使用右下角 Gemini diamond logo，而不是旧版 `"Veo"` 文字，因此 `pictx remove video.mp4` 默认处理 diamond profile。
 
 旧的 pre-Gemini-3.5 `"Veo"` 文字水印视频需要显式加 `--legacy`。视频 profile 之间不会自动 fallback，因为两者形状和位置不同，错误套用会破坏画面。
 
@@ -57,20 +72,22 @@
 3. 引擎会在浏览器本地自动处理并移除水印。
 4. 下载干净文件。
 
-### Chrome 扩展
+### Chrome 扩展（仅 Gemini 图片）
 
-在 Gemini 页面中自动处理生成图片：
+在 Gemini 页面自动处理生成**图片**（不支持 Veo 视频）：
 
-1. 从 Chrome Web Store 安装（即将上线），或从 `src/extension/` 加载未打包扩展。
-2. 打开 Gemini。
-3. 预览、复制、下载动作都会返回清理后的图片。
+1. 从 Chrome Web Store 安装（即将上线）、加载 `src/extension/`，或使用 GitHub Release zip。
+2. 打开 Gemini，扩展自动处理支持的图片。
+3. 预览、复制、下载均返回清理后的图片。
+4. 若页面变慢，可在 popup 中关闭开关并刷新 Gemini。
 
-### 用户脚本（Tampermonkey / Violentmonkey）
+### 用户脚本（Tampermonkey — 仅 Gemini 图片）
 
 1. 安装 Tampermonkey 或 Violentmonkey。
-2. 安装 `src/userscript/gemini-veo-watermark-remover.user.js`。
-3. 打开 Gemini 对话页面。
-4. 支持的图片会在页面中自动清理。
+2. 安装 `src/userscript/gemini-veo-watermark-remover.user.js` 或 [在线托管版本](https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js)。
+3. 打开 Gemini 对话页面，图片自动清理；原生复制/下载返回清理结果。
+
+Veo 视频请使用[在线工具](https://removegeminiwatermark.io)或 CLI。
 
 ### 命令行
 
@@ -78,18 +95,18 @@
 
 ```bash
 # 使用 npx（零安装）
-npx @vylio/gemini-veo-watermark-remover remove image.png
-npx @vylio/gemini-veo-watermark-remover remove video.mp4
-npx @vylio/gemini-veo-watermark-remover remove old-veo-video.mp4 --legacy
+npx pictx remove image.png
+npx pictx remove video.mp4
+npx pictx remove old-veo-video.mp4 --legacy
 
 # 或全局安装
-npm i -g @vylio/gemini-veo-watermark-remover
-vwr remove image.png -o clean.png
-vwr remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
-vwr remove old-veo-video.mp4 --legacy       # 旧版 "Veo" 文字水印
-vwr remove image.jpg --json
-vwr remove old-gemini.png --legacy
-vwr remove image.jpg --no-legacy
+npm i -g pictx
+pictx remove image.png -o clean.png
+pictx remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
+pictx remove old-veo-video.mp4 --legacy       # 旧版 "Veo" 文字水印
+pictx remove image.jpg --json
+pictx remove old-gemini.png --legacy
+pictx remove image.jpg --no-legacy
 ```
 
 支持格式：
@@ -101,7 +118,7 @@ vwr remove image.jpg --no-legacy
 
 ```js
 // 浏览器：移除 Gemini 图片水印
-import { removeGeminiWatermark } from '@vylio/gemini-veo-watermark-remover/browser';
+import { removeGeminiWatermark } from 'pictx/browser';
 
 const { blob, detected, confidence } = await removeGeminiWatermark(file);
 if (detected) {
@@ -110,7 +127,7 @@ if (detected) {
 }
 
 // 浏览器：处理 Gemini 3.5+ diamond 视频
-import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/browser';
+import { processVideoFile } from 'pictx/browser';
 
 const cleanBlob = await processVideoFile(videoFile, {
   onProgress: (current, total) => console.log(`${current}/${total} frames`),
@@ -120,14 +137,14 @@ const cleanBlob = await processVideoFile(videoFile, {
 const legacyBlob = await processVideoFile(videoFile, { videoProfile: 'legacy' });
 
 // Node.js：文件 API
-import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/node';
+import { processVideoFile } from 'pictx/node';
 await processVideoFile('input.mp4', 'output.mp4');
 
 // 轻量 Gemini-only 入口（不引入视频依赖）
 import {
   processImage,
   createImageProcessor,
-} from '@vylio/gemini-veo-watermark-remover/gemini';
+} from 'pictx/gemini';
 ```
 
 ### 无法移除你的水印？
@@ -162,10 +179,10 @@ original = (watermarked - alpha * logo) / (1 - alpha)
 
 | CLI 用法 | 首次尝试 | 回退 | 使用场景 |
 | --- | --- | --- | --- |
-| `vwr remove image.png` | Current / V2 | Legacy / V1 | 混合文件夹默认选择 |
-| `vwr remove image.png --legacy` | Legacy / V1 | — | 旧版 Gemini 输出 |
-| `vwr remove image.png --no-legacy` | Current / V2 | — | 严格只处理 Gemini 3.5+ |
-| `vwr remove image.png --legacy --no-legacy` | — | — | 参数冲突，退出码 2 |
+| `pictx remove image.png` | Current / V2 | Legacy / V1 | 混合文件夹默认选择 |
+| `pictx remove image.png --legacy` | Legacy / V1 | — | 旧版 Gemini 输出 |
+| `pictx remove image.png --no-legacy` | Current / V2 | — | 严格只处理 Gemini 3.5+ |
+| `pictx remove image.png --legacy --no-legacy` | — | — | 参数冲突，退出码 2 |
 
 ### Gemini 3.5+ 视频 Profile 支持
 
@@ -173,9 +190,9 @@ original = (watermarked - alpha * logo) / (1 - alpha)
 
 | CLI 用法 | 视频 profile | 使用场景 |
 | --- | --- | --- |
-| `vwr remove video.mp4` | Diamond | Gemini 3.5+ 视频，目前只校准 1080p 横屏/竖屏 |
-| `vwr remove old-video.mp4 --legacy` | 旧版 `"Veo"` 文字 | pre-Gemini-3.5 Veo 视频 |
-| `vwr remove video.mp4 --no-legacy` | Diamond | 对视频等同默认行为 |
+| `pictx remove video.mp4` | Diamond | Gemini 3.5+ 视频，目前只校准 1080p 横屏/竖屏 |
+| `pictx remove old-video.mp4 --legacy` | 旧版 `"Veo"` 文字 | pre-Gemini-3.5 Veo 视频 |
+| `pictx remove video.mp4 --no-legacy` | Diamond | 对视频等同默认行为 |
 
 退出码：
 
@@ -217,7 +234,7 @@ original = (watermarked - alpha * logo) / (1 - alpha)
 
 ```text
 gemini-veo-watermark-remover/
-├── bin/                     # CLI 入口（vwr）
+├── bin/                     # CLI 入口（pictx）
 ├── src/
 │   ├── core/
 │   │   ├── blendModes.js        # 共享反向 Alpha 混合算法
@@ -255,7 +272,7 @@ node build.js --watch
 ## Agent Skill
 
 ```bash
-pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @vylio/gemini-veo-watermark-remover
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/pictx
 node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ```
 
@@ -272,7 +289,7 @@ node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ## 相关链接
 
 - [在线工具 — removegeminiwatermark.io](https://removegeminiwatermark.io)
-- [Vylio — AI 图片与视频工具](https://vylio.ai)
+- [Pictx — AI 图片与视频工具](https://pictx.ai)
 - [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)
 - [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover)
 - [Reverse Alpha Blending 技术解析](https://allenkuo.medium.com/removing-gemini-ai-watermarks-a-deep-dive-into-reverse-alpha-blending-bbbd83af2a3f)

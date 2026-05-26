@@ -50,7 +50,7 @@ export { processFrame as processImageFrame } from '../core/frameProcessor.js'
  * @returns {Promise<{ blob: Blob, width: number, height: number, detected: boolean, confidence: number, status: string, profile?: string|null, attemptedProfiles?: string[] }>}
  */
 export async function removeGeminiWatermark(file, options = {}) {
-  const { quality = 0.95, format = 'image/png', skipDetection = false, profile = 'auto' } = options
+  const { quality = 0.95, format = 'image/png', skipDetection = false, profile = 'auto', adaptiveMode = 'auto', maxPasses = 4 } = options
 
   // Decode image file to ImageData via Canvas
   const bitmap = await createImageBitmap(file)
@@ -65,7 +65,7 @@ export async function removeGeminiWatermark(file, options = {}) {
 
   // Process the image
   const { processImage } = await import('../core/gemini/imageProcessor.js')
-  const result = processImage(imageData, { skipDetection, profile })
+  const result = processImage(imageData, { skipDetection, profile, adaptiveMode, maxPasses })
 
   if (!result.processed) {
     return {
@@ -77,6 +77,7 @@ export async function removeGeminiWatermark(file, options = {}) {
       status: result.reason || 'not_processed',
       profile: result.profile,
       attemptedProfiles: result.attemptedProfiles,
+      decisionTier: result.decisionTier ?? null,
     }
   }
 
@@ -93,5 +94,6 @@ export async function removeGeminiWatermark(file, options = {}) {
     status: 'success',
     profile: result.profile,
     attemptedProfiles: result.attemptedProfiles,
+    decisionTier: result.decisionTier ?? null,
   }
 }

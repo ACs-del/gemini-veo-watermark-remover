@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Gemini & Veo Watermark Remover",
-  "description": "Automatically removes visible watermarks from Gemini-generated images. Open source, 100% local processing.",
-  "version": "0.1.0",
+  "name": "Gemini Watermark Remover (Images)",
+  "description": "Automatically removes visible watermarks from Gemini-generated images on Gemini pages. Images only — for Veo videos use removegeminiwatermark.io or the pictx CLI.",
+  "version": "0.2.1",
   "permissions": ["activeTab", "storage"],
   "host_permissions": [
     "https://gemini.google.com/*",

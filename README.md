@@ -1,6 +1,6 @@
 [中文文档](README_zh.md)
 
-> 🔥 Tired of Gemini and Veo watermarks? Try the more powerful **GPT Image 2** at [vylio.ai](https://vylio.ai) — free for a limited time.
+> 🔥 Tired of Gemini and Veo watermarks? Try the more powerful **GPT Image 2** at [pictx.ai](https://pictx.ai) — free for a limited time.
 
 # Gemini & Veo Watermark Remover — Lossless AI Watermark Removal Tool
 
@@ -10,13 +10,13 @@ An open-source tool to **remove Gemini image watermarks and Veo video watermarks
 
 🚀 **Looking for the `Online Gemini & Veo Watermark Remover (Recommended)`? Try [removegeminiwatermark.io](https://removegeminiwatermark.io)** — free, no install, works directly in your browser.
 
-💡 **Need to remove other image or video watermarks?** Try the general-purpose AI watermark remover: [vylio.ai/image-watermark-remover](https://vylio.ai/image-watermark-remover)
+💡 **Need to remove other image or video watermarks?** Try the general-purpose AI watermark remover: [pictx.ai/image-watermark-remover](https://pictx.ai/image-watermark-remover)
 
 <p align="center">
   <a href="https://removegeminiwatermark.io/"><img src="https://img.shields.io/badge/🛠️_Online_Tool-removegeminiwatermark.io-blue?style=for-the-badge" alt="Online Tool"></a>&nbsp;
-  <a href="https://www.npmjs.com/package/@vylio/gemini-veo-watermark-remover"><img src="https://img.shields.io/badge/📦_npm-@vylio%2Fgemini--veo--watermark--remover-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
+  <a href="https://www.npmjs.com/package/pictx"><img src="https://img.shields.io/badge/📦_npm-pictx-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
   <a href="https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js"><img src="https://img.shields.io/badge/🐒_Userscript-Install-green?style=for-the-badge" alt="Userscript"></a>&nbsp;
-  <a href="https://vylio.ai/image-watermark-remover"><img src="https://img.shields.io/badge/🧹_General_Remover-vylio.ai-111111?style=for-the-badge" alt="General AI Watermark Remover"></a>
+  <a href="https://pictx.ai/image-watermark-remover"><img src="https://img.shields.io/badge/🧹_General_Remover-pictx.ai-111111?style=for-the-badge" alt="General AI Watermark Remover"></a>
 </p>
 
 <p align="center">
@@ -34,6 +34,21 @@ An open-source tool to **remove Gemini image watermarks and Veo video watermarks
 - ✅ **Flexible Usage** — Online tool, Chrome extension, userscript, CLI, SDK, and AI Agent Skill.
 - ✅ **Cross-Platform** — Works in modern browsers and Node.js environments.
 
+## Channel × Media Support
+
+Not every distribution channel handles both Gemini **images** and Veo **videos**. Use this matrix to pick the right tool:
+
+| Channel | Gemini images | Veo videos | Notes |
+| --- | :---: | :---: | --- |
+| npm `pictx` SDK | ✅ | ✅ | `pictx/browser`, `pictx/node`, `pictx/gemini` |
+| CLI `pictx remove` | ✅ | ✅ | Batch folders with `--out-dir` |
+| Agent Skill | ✅ | ✅ | Wraps the CLI |
+| [removegeminiwatermark.io](https://removegeminiwatermark.io) | ✅ | ✅ | Upload-based WebCodecs pipeline |
+| Chrome extension | ✅ | ❌ | Gemini page images only; copy + download cleaned |
+| Userscript | ✅ | ❌ | Gemini page images only |
+
+For Veo videos from the browser, use the online tool or `npx pictx remove video.mp4`. The extension and userscript intentionally stay image-only because they integrate with Gemini chat previews, not whole-file video decoding.
+
 ## Watermark Removal Examples
 
 | Original Image | Watermark Removed |
@@ -42,7 +57,7 @@ An open-source tool to **remove Gemini image watermarks and Veo video watermarks
 
 ## What's New
 
-The video engine has been updated to follow [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo). Gemini 3.5+ video outputs now use the Gemini diamond logo instead of the old "Veo" text overlay, so `vwr remove video.mp4` targets the diamond profile by default.
+The video engine has been updated to follow [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo). Gemini 3.5+ video outputs now use the Gemini diamond logo instead of the old "Veo" text overlay, so `pictx remove video.mp4` targets the diamond profile by default.
 
 Older pre-Gemini-3.5 videos with the "Veo" text watermark must be processed with `--legacy`. There is no automatic fallback between video profiles because the shapes and positions differ, and applying the wrong profile can damage the frame.
 
@@ -57,20 +72,23 @@ The fastest and easiest way — works for both Gemini images and Veo videos:
 3. The engine will automatically process and remove the watermark.
 4. Download the cleaned file.
 
-### Chrome Extension
+### Chrome Extension (Gemini images only)
 
-Automatically removes watermarks from Gemini-generated images on Gemini pages:
+Automatically removes watermarks from Gemini-generated **images** on Gemini pages (not Veo videos):
 
-1. Install from the Chrome Web Store (coming soon) or load unpacked from `src/extension/`.
+1. Install from the Chrome Web Store (coming soon), load unpacked from `src/extension/`, or use the GitHub Release zip.
 2. Open Gemini. The extension automatically processes supported images.
-3. Preview, copy, and download actions all return cleaned images.
+3. Preview, copy, and download actions return cleaned images.
+4. If the page becomes slow, disable the extension from the popup and refresh Gemini.
 
-### Userscript (Tampermonkey / Violentmonkey)
+### Userscript (Tampermonkey / Violentmonkey — Gemini images only)
 
 1. Install a userscript manager (e.g., Tampermonkey).
-2. Install `gemini-veo-watermark-remover.user.js` from `src/userscript/`.
+2. Install `gemini-veo-watermark-remover.user.js` from `src/userscript/` or [removegeminiwatermark.io/userscript/](https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js).
 3. Navigate to Gemini conversation pages.
-4. Images are automatically cleaned in-place.
+4. Images are automatically cleaned in-place; native copy/download flows return cleaned results.
+
+For Veo videos, use the [online tool](https://removegeminiwatermark.io) or CLI instead.
 
 ### CLI
 
@@ -78,18 +96,18 @@ For scripting, CI, and local batch workflows:
 
 ```bash
 # Using npx (zero install)
-npx @vylio/gemini-veo-watermark-remover remove image.png
-npx @vylio/gemini-veo-watermark-remover remove video.mp4
-npx @vylio/gemini-veo-watermark-remover remove old-veo-video.mp4 --legacy
+npx pictx remove image.png
+npx pictx remove video.mp4
+npx pictx remove old-veo-video.mp4 --legacy
 
 # Or install globally
-npm i -g @vylio/gemini-veo-watermark-remover
-vwr remove image.png -o clean.png
-vwr remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
-vwr remove old-veo-video.mp4 --legacy       # old "Veo" text watermark
-vwr remove image.jpg --json  # machine-readable output
-vwr remove old-gemini.png --legacy
-vwr remove image.jpg --no-legacy
+npm i -g pictx
+pictx remove image.png -o clean.png
+pictx remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
+pictx remove old-veo-video.mp4 --legacy       # old "Veo" text watermark
+pictx remove image.jpg --json  # machine-readable output
+pictx remove old-gemini.png --legacy
+pictx remove image.jpg --no-legacy
 ```
 
 Supported formats:
@@ -100,7 +118,7 @@ Supported formats:
 
 ```javascript
 // Browser — remove Gemini watermark from image
-import { removeGeminiWatermark } from '@vylio/gemini-veo-watermark-remover/browser';
+import { removeGeminiWatermark } from 'pictx/browser';
 
 const { blob, detected, confidence } = await removeGeminiWatermark(file);
 if (detected) {
@@ -109,7 +127,7 @@ if (detected) {
 }
 
 // Browser — process Gemini 3.5+ diamond video
-import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/browser';
+import { processVideoFile } from 'pictx/browser';
 
 const cleanBlob = await processVideoFile(videoFile, {
   onProgress: (current, total) => console.log(`${current}/${total} frames`),
@@ -119,11 +137,11 @@ const cleanBlob = await processVideoFile(videoFile, {
 const legacyBlob = await processVideoFile(videoFile, { videoProfile: 'legacy' });
 
 // Node.js — file-based API
-import { processVideoFile } from '@vylio/gemini-veo-watermark-remover/node';
+import { processVideoFile } from 'pictx/node';
 await processVideoFile('input.mp4', 'output.mp4');
 
 // Gemini-only lightweight import (no video deps)
-import { processImage, createImageProcessor } from '@vylio/gemini-veo-watermark-remover/gemini';
+import { processImage, createImageProcessor } from 'pictx/gemini';
 ```
 
 ### Can't Remove Your Watermark?
@@ -150,7 +168,8 @@ By calibrating the exact Alpha map from known outputs, we reconstruct the origin
 
 1. **Profile catalog lookup** — matches image dimensions to predict the current Gemini 3.5+ watermark profile first, then legacy when needed.
 2. **NCC template matching** — Normalized Cross-Correlation search in the bottom-right region.
-3. **Confidence threshold** — only applies removal when detection confidence ≥ 50%.
+3. **Restoration validation** — confirms the detected watermark is real before applying removal (disable with `--adaptive off`).
+4. **Confidence threshold** — only applies removal when detection confidence ≥ 50%.
 
 ### Gemini 3.5+ Profile Support
 
@@ -158,10 +177,10 @@ Starting with Gemini 3.5, Google shifted the visible image watermark position an
 
 | CLI usage | First attempt | Fallback | Use case |
 | --- | --- | --- | --- |
-| `vwr remove image.png` | Current / V2 | Legacy / V1 | Default for mixed folders |
-| `vwr remove image.png --legacy` | Legacy / V1 | — | Pre-Gemini 3.5 outputs |
-| `vwr remove image.png --no-legacy` | Current / V2 | — | Strict Gemini 3.5+ only |
-| `vwr remove image.png --legacy --no-legacy` | — | — | Conflict, exits 2 |
+| `pictx remove image.png` | Current / V2 | Legacy / V1 | Default for mixed folders |
+| `pictx remove image.png --legacy` | Legacy / V1 | — | Pre-Gemini 3.5 outputs |
+| `pictx remove image.png --no-legacy` | Current / V2 | — | Strict Gemini 3.5+ only |
+| `pictx remove image.png --legacy --no-legacy` | — | — | Conflict, exits 2 |
 
 ### Gemini 3.5+ Video Profile Support
 
@@ -169,9 +188,9 @@ Starting with Gemini 3.5, video outputs use the Gemini diamond logo in the botto
 
 | CLI usage | Video profile | Use case |
 | --- | --- | --- |
-| `vwr remove video.mp4` | Diamond | Gemini 3.5+ videos, currently calibrated for 1080p landscape/portrait |
-| `vwr remove old-video.mp4 --legacy` | Legacy "Veo" text | Pre-Gemini-3.5 Veo videos |
-| `vwr remove video.mp4 --no-legacy` | Diamond | Same as the default for videos |
+| `pictx remove video.mp4` | Diamond | Gemini 3.5+ videos, currently calibrated for 1080p landscape/portrait |
+| `pictx remove old-video.mp4 --legacy` | Legacy "Veo" text | Pre-Gemini-3.5 Veo videos |
+| `pictx remove video.mp4 --no-legacy` | Diamond | Same as the default for videos |
 
 Exit codes:
 
@@ -213,7 +232,7 @@ Exit codes:
 
 ```
 gemini-veo-watermark-remover/
-├── bin/                     # CLI entrypoint (vwr)
+├── bin/                     # CLI entrypoint (pictx)
 ├── src/
 │   ├── core/
 │   │   ├── blendModes.js        # Shared reverse alpha blending algorithm
@@ -267,7 +286,7 @@ node build.js --watch
 ## Agent Skill
 
 ```bash
-pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @vylio/gemini-veo-watermark-remover
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/pictx
 node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ```
 
@@ -284,7 +303,7 @@ This project is released under the MIT License. The removal of watermarks may ha
 ## Related Links
 
 - [Online Tool — removegeminiwatermark.io](https://removegeminiwatermark.io)
-- [Vylio — AI image & video tools](https://vylio.ai)
+- [Pictx — AI image & video tools](https://pictx.ai)
 - [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool) — Original C/C++ implementation
 - [VeoWatermarkRemover](https://github.com/allenk/VeoWatermarkRemover) — Original Veo CLI
 - [Reverse Alpha Blending Deep Dive](https://allenkuo.medium.com/removing-gemini-ai-watermarks-a-deep-dive-into-reverse-alpha-blending-bbbd83af2a3f)

@@ -13,8 +13,10 @@
 import { removeWatermark } from '../blendModes.js'
 import { getGeminiWatermarkInfo, normalizeGeminiProfile } from './geminiConfig.js'
 import { getGeminiAlphaMap } from './geminiAlphaMaps.js'
+import { cloneImageData, validateRestoration } from './restorationMetrics.js'
 
 const PROFILE_ORDER = ['current', 'legacy']
+const DEFAULT_MAX_PASSES = 4
 
 /**
  * Compute Normalized Cross-Correlation between an image region and the alpha map.
@@ -126,7 +128,7 @@ function getProfilesToTry(profile) {
   return [normalizeGeminiProfile(profile)]
 }
 
-function emptyResult(imageData, reason, attemptedProfiles, profile = null) {
+function emptyResult(imageData, reason, attemptedProfiles, profile = null, meta = {}) {
   return {
     imageData,
     processed: false,
@@ -135,12 +137,29 @@ function emptyResult(imageData, reason, attemptedProfiles, profile = null) {
     reason,
     profile,
     attemptedProfiles,
+    decisionTier: meta.decisionTier ?? null,
+    meta: meta.validation ?? null,
   }
+}
+
+function normalizeAdaptiveMode(adaptiveMode) {
+  if (!adaptiveMode || adaptiveMode === 'auto') return 'auto'
+  if (adaptiveMode === 'off') return 'off'
+  return 'auto'
+}
+
+function copyImageData(target, source) {
+  target.data.set(source.data)
 }
 
 function processImageWithProfile(imageData, options, profile) {
   const { width, height } = imageData
-  const { skipDetection = false, forcePosition } = options
+  const {
+    skipDetection = false,
+    forcePosition,
+    adaptiveMode = 'auto',
+  } = options
+  const useValidation = normalizeAdaptiveMode(adaptiveMode) === 'auto' && !skipDetection && !forcePosition
 
   const info = getGeminiWatermarkInfo(width, height, profile)
   if (!info) {
@@ -188,8 +207,45 @@ function processImageWithProfile(imageData, options, profile) {
     }
   }
 
-  // Apply reverse alpha blending
-  removeWatermark(imageData, alphaMapEntry.data, position)
+  const workingCopy = cloneImageData(imageData)
+  removeWatermark(workingCopy, alphaMapEntry.data, position)
+
+  let decisionTier = skipDetection || forcePosition ? 'ncc_only' : 'ncc_only'
+  let validationMeta = null
+
+  if (useValidation) {
+    const preRemovalNcc = computeNCC(
+      imageData.data,
+      width,
+      position.x,
+      position.y,
+      alphaMapEntry.data,
+      alphaMapEntry.width,
+      alphaMapEntry.height,
+      2,
+    )
+    const validation = validateRestoration(
+      imageData,
+      workingCopy,
+      position,
+      alphaMapEntry.data,
+      preRemovalNcc,
+    )
+    validationMeta = validation
+
+    if (!validation.valid) {
+      return emptyResult(
+        imageData,
+        'restoration_rejected',
+        [profile],
+        profile,
+        { decisionTier: validation.decisionTier, validation },
+      )
+    }
+    decisionTier = validation.decisionTier
+  }
+
+  copyImageData(imageData, workingCopy)
 
   return {
     imageData,
@@ -198,6 +254,8 @@ function processImageWithProfile(imageData, options, profile) {
     position,
     profile,
     attemptedProfiles: [profile],
+    decisionTier,
+    meta: validationMeta,
   }
 }
 
@@ -211,18 +269,23 @@ function processImageWithProfile(imageData, options, profile) {
 export function processImage(imageData, options = {}) {
   const profile = options.profile ?? 'auto'
   const profilesToTry = getProfilesToTry(profile)
+  const maxPasses = Math.max(1, options.maxPasses ?? DEFAULT_MAX_PASSES)
   const attemptedProfiles = []
   let lastResult = null
+  let passCount = 0
 
   for (const activeProfile of profilesToTry) {
+    if (passCount >= maxPasses) break
+
     attemptedProfiles.push(activeProfile)
+    passCount++
     const result = processImageWithProfile(imageData, options, activeProfile)
     result.attemptedProfiles = [...attemptedProfiles]
 
     if (result.processed) return result
     lastResult = result
 
-    if (result.reason !== 'watermark_not_detected') break
+    if (result.reason !== 'watermark_not_detected' && result.reason !== 'restoration_rejected') break
   }
 
   return {
@@ -288,7 +351,7 @@ export function createImageProcessor(targetWidth, targetHeight) {
           if (result.processed) return result
           lastResult = result
 
-          if (result.reason !== 'watermark_not_detected') break
+          if (result.reason !== 'watermark_not_detected' && result.reason !== 'restoration_rejected') break
         }
 
         return {

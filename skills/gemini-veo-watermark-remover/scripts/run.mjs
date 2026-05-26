@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Agent skill entrypoint — wraps the vwr CLI for image/video watermark removal.
+ * Agent skill entrypoint — wraps the pictx CLI for image/video watermark removal.
  *
  * Usage:
  *   node skills/gemini-veo-watermark-remover/scripts/run.mjs <input> [output] [--legacy] [--json]

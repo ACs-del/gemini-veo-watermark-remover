@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Gemini & Veo Watermark Remover
+// @name         Gemini Image Watermark Remover
 // @namespace    https://removegeminiwatermark.io
-// @version      0.1.0
-// @description  Automatically removes visible watermarks from Gemini-generated images on Gemini pages. 100% local processing.
+// @version      0.2.1
+// @description  Removes visible Gemini image watermarks on Gemini pages (images only). For Veo videos use removegeminiwatermark.io or pictx CLI. 100% local.
 // @author       ACs-del
 // @match        https://gemini.google.com/*
 // @match        https://aistudio.google.com/*

@@ -1,6 +1,6 @@
 {
-  "name": "@vylio/gemini-veo-watermark-remover",
-  "version": "0.2.0",
+  "name": "pictx",
+  "version": "0.2.1",
   "description": "Remove Gemini 3.5+/legacy image watermarks and Veo video watermarks locally with reverse alpha blending. Browser, CLI, SDK, extension, userscript.",
   "type": "module",
   "main": "./dist/index.js",
@@ -24,7 +24,7 @@
     }
   },
   "bin": {
-    "vwr": "bin/vwr.mjs"
+    "pictx": "bin/pictx.mjs"
   },
   "files": [
     "dist/",
@@ -39,7 +39,8 @@
     "prebuild": "node scripts/embed-alpha-maps.mjs",
     "build": "node build.js",
     "dev": "node build.js --watch",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "package:extension": "node scripts/package-extension.mjs"
   },
   "keywords": [
     "gemini",
@@ -55,7 +56,7 @@
   ],
   "license": "MIT",
   "author": "ACs-del",
-  "homepage": "https://vylio.ai",
+  "homepage": "https://pictx.ai",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ACs-del/gemini-veo-watermark-remover.git"
