@@ -259,8 +259,17 @@ node build.js --watch
 
 - Only removes **visible** Gemini/Veo watermarks (logo overlay, text watermark)
 - Does **not** remove invisible SynthID or steganographic watermarks
-- Video alpha maps are placeholder approximations in this JS port. The upstream calibrated binary masks are not embedded; please [contribute calibrated maps](https://github.com/ACs-del/gemini-veo-watermark-remover/issues).
-- Gemini 3.5 diamond video mode is limited to 1080p landscape and portrait until more samples are calibrated.
+- Gemini 3.5 diamond video mode is limited to 1080p landscape and portrait until more samples are calibrated
+- Browser video processing requires WebCodecs (Chrome 94+, Edge 94+)
+
+<a id="skill"></a>
+
+## Agent Skill
+
+```bash
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @vylio/gemini-veo-watermark-remover
+node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
+```
 
 ## Legal Disclaimer
 

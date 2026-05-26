@@ -247,9 +247,17 @@ node build.js --watch
 
 - 仅移除 **可见** Gemini/Veo 水印（Logo 叠加、文字水印）
 - 不移除不可见 SynthID 或隐写水印
-- JS 版内置的视频 Alpha maps 仍是占位近似；未嵌入上游二进制中的 calibrated masks，欢迎贡献样本和精确 maps
 - Gemini 3.5 diamond 视频模式当前仅支持 1080p 横屏和竖屏
 - 视频处理依赖浏览器 WebCodecs 或 Node.js/ffmpeg.wasm 能力
+
+<a id="skill"></a>
+
+## Agent Skill
+
+```bash
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @vylio/gemini-veo-watermark-remover
+node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
+```
 
 ## 法律声明
 

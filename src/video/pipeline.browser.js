@@ -28,15 +28,23 @@ export async function processVideo(input, options = {}) {
 
   const processor = createFrameProcessor(videoInfo.width, videoInfo.height, { videoProfile });
 
+  const audioData = await decoder.extractAudio();
+
   const encoder = new WebCodecsEncoder();
   await encoder.init({
     width: videoInfo.width,
     height: videoInfo.height,
     fps: videoInfo.fps,
     bitrate: bitrate || 5_000_000,
+    audio: audioData
+      ? {
+          codec: audioData.codec,
+          sampleRate: audioData.sampleRate,
+          numberOfChannels: audioData.numberOfChannels,
+        }
+      : undefined,
   });
 
-  const audioData = await decoder.extractAudio();
   if (audioData) {
     await encoder.setAudioTrack(audioData);
   }

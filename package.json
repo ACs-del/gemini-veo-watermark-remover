@@ -1,6 +1,6 @@
 {
   "name": "@vylio/gemini-veo-watermark-remover",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Remove Gemini 3.5+/legacy image watermarks and Veo video watermarks locally with reverse alpha blending. Browser, CLI, SDK, extension, userscript.",
   "type": "module",
   "main": "./dist/index.js",
@@ -29,10 +29,14 @@
   "files": [
     "dist/",
     "bin/",
+    "assets/masks/",
+    "skills/",
     "src/extension/",
     "src/userscript/"
   ],
   "scripts": {
+    "embed-masks": "node scripts/embed-alpha-maps.mjs",
+    "prebuild": "node scripts/embed-alpha-maps.mjs",
     "build": "node build.js",
     "dev": "node build.js --watch",
     "test": "node --test tests/*.test.js"

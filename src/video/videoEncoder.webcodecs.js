@@ -8,6 +8,7 @@ export class WebCodecsEncoder extends VideoEncoderBase {
   #muxer = null;
   #encoder = null;
   #frameCount = 0;
+  #audioSamples = null;
   _target = null;
 
   async init(config) {
@@ -19,7 +20,7 @@ export class WebCodecsEncoder extends VideoEncoderBase {
 
     const target = new ArrayBufferTarget();
 
-    this.#muxer = new Muxer({
+    const muxerConfig = {
       target,
       video: {
         codec: 'avc',
@@ -27,7 +28,17 @@ export class WebCodecsEncoder extends VideoEncoderBase {
         height: config.height,
       },
       fastStart: 'in-memory',
-    });
+    };
+
+    if (config.audio) {
+      muxerConfig.audio = {
+        codec: config.audio.codec || 'aac',
+        numberOfChannels: config.audio.numberOfChannels || 2,
+        sampleRate: config.audio.sampleRate || 48000,
+      };
+    }
+
+    this.#muxer = new Muxer(muxerConfig);
 
     this.#encoder = new VideoEncoder({
       output: (chunk, meta) => {
@@ -63,13 +74,29 @@ export class WebCodecsEncoder extends VideoEncoderBase {
     this.#frameCount++;
   }
 
-  async setAudioTrack(/* audioData */) {
-    // TODO: mux audio via mp4-muxer
+  /**
+   * Queue encoded audio samples for passthrough muxing after video finalize.
+   * @param {{ codec?: string, sampleRate: number, numberOfChannels: number, samples: Array<{ data: Uint8Array, timestamp: number, duration: number, type: 'key'|'delta' }> }} audioData
+   */
+  async setAudioTrack(audioData) {
+    this.#audioSamples = audioData;
   }
 
   async finalize() {
     await this.#encoder.flush();
     this.#encoder.close();
+
+    if (this.#audioSamples?.samples?.length) {
+      for (const sample of this.#audioSamples.samples) {
+        this.#muxer.addAudioChunkRaw(
+          sample.data,
+          sample.type,
+          sample.timestamp,
+          sample.duration,
+        );
+      }
+    }
+
     this.#muxer.finalize();
     return new Blob([this._target.buffer], { type: 'video/mp4' });
   }

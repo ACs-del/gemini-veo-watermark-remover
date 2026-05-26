@@ -6,54 +6,111 @@ import { VideoDecoderBase } from './videoDecoder.base.js';
 
 export class WebCodecsDecoder extends VideoDecoderBase {
   #videoInfo = null;
-  #file = null;
+  #videoMp4 = null;
+  #sourceBuffer = null;
   #frameIndex = 0;
+  #audioData = null;
 
   async open(source) {
     if (typeof VideoDecoder === 'undefined') {
       throw new Error('WebCodecs API not available. Use Chrome 94+ or a fallback decoder.');
     }
 
-    const buffer = await source.arrayBuffer();
+    this.#sourceBuffer = await source.arrayBuffer();
     const { createFile } = await import('mp4box');
-    const mp4File = createFile();
 
-    return new Promise((resolve, reject) => {
-      mp4File.onReady = (info) => {
-        const videoTrack = info.videoTracks[0];
-        if (!videoTrack) {
-          reject(new Error('No video track found'));
-          return;
-        }
-
-        this.#videoInfo = {
-          width: videoTrack.video.width,
-          height: videoTrack.video.height,
-          frameCount: videoTrack.nb_samples,
-          duration: videoTrack.duration / videoTrack.timescale,
-          fps: videoTrack.nb_samples / (videoTrack.duration / videoTrack.timescale),
-          codec: videoTrack.codec,
-        };
-
-        this.#file = mp4File;
-        mp4File.setExtractionOptions(videoTrack.id);
-        resolve(this.#videoInfo);
-      };
-
-      mp4File.onError = reject;
-
-      buffer.fileStart = 0;
-      mp4File.appendBuffer(buffer);
-      mp4File.flush();
+    const probeFile = createFile();
+    const info = await new Promise((resolve, reject) => {
+      probeFile.onReady = resolve;
+      probeFile.onError = reject;
+      this.#sourceBuffer.fileStart = 0;
+      probeFile.appendBuffer(this.#sourceBuffer);
+      probeFile.flush();
     });
+
+    const videoTrack = info.videoTracks[0];
+    if (!videoTrack) {
+      throw new Error('No video track found');
+    }
+
+    this.#videoInfo = {
+      width: videoTrack.video.width,
+      height: videoTrack.video.height,
+      frameCount: videoTrack.nb_samples,
+      duration: videoTrack.duration / videoTrack.timescale,
+      fps: videoTrack.nb_samples / (videoTrack.duration / videoTrack.timescale),
+      codec: videoTrack.codec,
+      videoTrackId: videoTrack.id,
+    };
+
+    const audioTrack = info.audioTracks?.[0] ?? null;
+    if (audioTrack) {
+      this.#audioData = await this.#readTrackSamples(createFile, audioTrack);
+    }
+
+    this.#videoMp4 = createFile();
+    await new Promise((resolve, reject) => {
+      this.#videoMp4.onReady = resolve;
+      this.#videoMp4.onError = reject;
+      const buffer = this.#sourceBuffer.slice(0);
+      buffer.fileStart = 0;
+      this.#videoMp4.appendBuffer(buffer);
+      this.#videoMp4.flush();
+    });
+
+    return this.#videoInfo;
+  }
+
+  /**
+   * @param {typeof import('mp4box').createFile} createFile
+   * @param {object} track
+   */
+  async #readTrackSamples(createFile, track) {
+    const mp4 = createFile();
+    const samples = [];
+
+    await new Promise((resolve, reject) => {
+      mp4.onReady = () => {
+        mp4.onSamples = (_trackId, _user, trackSamples) => {
+          for (const sample of trackSamples) {
+            samples.push({
+              data: sample.data,
+              timestamp: Math.round((sample.cts * 1_000_000) / sample.timescale),
+              duration: Math.round((sample.duration * 1_000_000) / sample.timescale),
+              type: sample.is_sync ? 'key' : 'delta',
+            });
+          }
+        };
+        mp4.setExtractionOptions(track.id);
+        mp4.start();
+        mp4.flush();
+        queueMicrotask(resolve);
+      };
+      mp4.onError = reject;
+      const buffer = this.#sourceBuffer.slice(0);
+      buffer.fileStart = 0;
+      mp4.appendBuffer(buffer);
+      mp4.flush();
+    });
+
+    return {
+      codec: 'aac',
+      sampleRate: track.audio?.sample_rate ?? 48000,
+      numberOfChannels: track.audio?.channel_count ?? 2,
+      samples,
+    };
+  }
+
+  async extractAudio() {
+    return this.#audioData;
   }
 
   async *decodeFrames() {
-    if (!this.#file || !this.#videoInfo) {
+    if (!this.#videoMp4 || !this.#videoInfo) {
       throw new Error('Call open() first');
     }
 
-    const { width, height } = this.#videoInfo;
+    const { width, height, videoTrackId } = this.#videoInfo;
     const pendingFrames = [];
     let resolveNext = null;
     let done = false;
@@ -93,8 +150,8 @@ export class WebCodecsDecoder extends VideoDecoderBase {
       codedHeight: height,
     });
 
-    this.#file.onSamples = (_trackId, _user, samples) => {
-      for (const sample of samples) {
+    this.#videoMp4.onSamples = (_trackId, _user, trackSamples) => {
+      for (const sample of trackSamples) {
         const chunk = new EncodedVideoChunk({
           type: sample.is_sync ? 'key' : 'delta',
           timestamp: (sample.cts * 1_000_000) / sample.timescale,
@@ -105,7 +162,8 @@ export class WebCodecsDecoder extends VideoDecoderBase {
       }
     };
 
-    this.#file.start();
+    this.#videoMp4.setExtractionOptions(videoTrackId);
+    this.#videoMp4.start();
 
     while (!done) {
       if (pendingFrames.length > 0) {
@@ -129,8 +187,10 @@ export class WebCodecsDecoder extends VideoDecoderBase {
   }
 
   async close() {
-    this.#file = null;
+    this.#videoMp4 = null;
     this.#videoInfo = null;
+    this.#audioData = null;
+    this.#sourceBuffer = null;
     this.#frameIndex = 0;
   }
 }

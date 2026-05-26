@@ -72,6 +72,10 @@ async function build() {
     console.log('Watching...')
   } else {
     await Promise.all(configs.map(c => esbuild.build(c)))
+    const { cp } = await import('node:fs/promises')
+    for (const name of ['index', 'browser', 'node', 'gemini']) {
+      await cp(`types/${name}.d.ts`, `dist/${name}.d.ts`)
+    }
     console.log('Build complete.')
   }
 }
