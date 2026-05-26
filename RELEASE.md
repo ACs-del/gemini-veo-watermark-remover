@@ -14,7 +14,7 @@ npm run build
 npm publish --access public
 ```
 
-Requires npm login and ownership of the `pictx` package name.
+Requires npm login and an `@pictx` org (or user scope) with permission to publish `@pictx/gemini-veo-watermark-remover`.
 
 ## GitHub Release
 

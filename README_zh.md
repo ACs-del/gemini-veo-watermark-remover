@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://removegeminiwatermark.io/"><img src="https://img.shields.io/badge/🛠️_在线工具-removegeminiwatermark.io-blue?style=for-the-badge" alt="在线工具"></a>&nbsp;
-  <a href="https://www.npmjs.com/package/pictx"><img src="https://img.shields.io/badge/📦_npm-pictx-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
+  <a href="https://www.npmjs.com/package/@pictx/gemini-veo-watermark-remover"><img src="https://img.shields.io/badge/📦_npm-@pictx/gemini--veo--watermark--remover-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
   <a href="https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js"><img src="https://img.shields.io/badge/🐒_用户脚本-安装-green?style=for-the-badge" alt="用户脚本"></a>&nbsp;
   <a href="https://pictx.ai/image-watermark-remover"><img src="https://img.shields.io/badge/🧹_通用去水印-pictx.ai-111111?style=for-the-badge" alt="通用 AI 去水印"></a>
 </p>
@@ -40,7 +40,7 @@
 
 | 渠道 | Gemini 图片 | Veo 视频 | 说明 |
 | --- | :---: | :---: | --- |
-| npm `pictx` SDK | ✅ | ✅ | `pictx/browser`、`pictx/node`、`pictx/gemini` |
+| npm `@pictx/gemini-veo-watermark-remover` | ✅ | ✅ | `.../browser`、`.../node`、`.../gemini` |
 | CLI `pictx remove` | ✅ | ✅ | 目录批处理 `--out-dir` |
 | Agent Skill | ✅ | ✅ | 包装 CLI |
 | [removegeminiwatermark.io](https://removegeminiwatermark.io) | ✅ | ✅ | 浏览器上传 + WebCodecs |
@@ -95,12 +95,12 @@ Veo 视频请使用[在线工具](https://removegeminiwatermark.io)或 CLI。
 
 ```bash
 # 使用 npx（零安装）
-npx pictx remove image.png
-npx pictx remove video.mp4
-npx pictx remove old-veo-video.mp4 --legacy
+npx @pictx/gemini-veo-watermark-remover remove image.png
+npx @pictx/gemini-veo-watermark-remover remove video.mp4
+npx @pictx/gemini-veo-watermark-remover remove old-veo-video.mp4 --legacy
 
-# 或全局安装
-npm i -g pictx
+# 或全局安装（CLI 短命令仍为 pictx）
+npm i -g @pictx/gemini-veo-watermark-remover
 pictx remove image.png -o clean.png
 pictx remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
 pictx remove old-veo-video.mp4 --legacy       # 旧版 "Veo" 文字水印
@@ -118,7 +118,7 @@ pictx remove image.jpg --no-legacy
 
 ```js
 // 浏览器：移除 Gemini 图片水印
-import { removeGeminiWatermark } from 'pictx/browser';
+import { removeGeminiWatermark } from '@pictx/gemini-veo-watermark-remover/browser';
 
 const { blob, detected, confidence } = await removeGeminiWatermark(file);
 if (detected) {
@@ -127,7 +127,7 @@ if (detected) {
 }
 
 // 浏览器：处理 Gemini 3.5+ diamond 视频
-import { processVideoFile } from 'pictx/browser';
+import { processVideoFile } from '@pictx/gemini-veo-watermark-remover/browser';
 
 const cleanBlob = await processVideoFile(videoFile, {
   onProgress: (current, total) => console.log(`${current}/${total} frames`),
@@ -137,14 +137,14 @@ const cleanBlob = await processVideoFile(videoFile, {
 const legacyBlob = await processVideoFile(videoFile, { videoProfile: 'legacy' });
 
 // Node.js：文件 API
-import { processVideoFile } from 'pictx/node';
+import { processVideoFile } from '@pictx/gemini-veo-watermark-remover/node';
 await processVideoFile('input.mp4', 'output.mp4');
 
 // 轻量 Gemini-only 入口（不引入视频依赖）
 import {
   processImage,
   createImageProcessor,
-} from 'pictx/gemini';
+} from '@pictx/gemini-veo-watermark-remover/gemini';
 ```
 
 ### 无法移除你的水印？
@@ -272,7 +272,7 @@ node build.js --watch
 ## Agent Skill
 
 ```bash
-pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/pictx
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/gemini-veo-watermark-remover
 node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ```
 

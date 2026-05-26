@@ -14,7 +14,7 @@ An open-source tool to **remove Gemini image watermarks and Veo video watermarks
 
 <p align="center">
   <a href="https://removegeminiwatermark.io/"><img src="https://img.shields.io/badge/🛠️_Online_Tool-removegeminiwatermark.io-blue?style=for-the-badge" alt="Online Tool"></a>&nbsp;
-  <a href="https://www.npmjs.com/package/pictx"><img src="https://img.shields.io/badge/📦_npm-pictx-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
+  <a href="https://www.npmjs.com/package/@pictx/gemini-veo-watermark-remover"><img src="https://img.shields.io/badge/📦_npm-@pictx/gemini--veo--watermark--remover-CB3837?style=for-the-badge" alt="npm package"></a>&nbsp;
   <a href="https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js"><img src="https://img.shields.io/badge/🐒_Userscript-Install-green?style=for-the-badge" alt="Userscript"></a>&nbsp;
   <a href="https://pictx.ai/image-watermark-remover"><img src="https://img.shields.io/badge/🧹_General_Remover-pictx.ai-111111?style=for-the-badge" alt="General AI Watermark Remover"></a>
 </p>
@@ -40,7 +40,7 @@ Not every distribution channel handles both Gemini **images** and Veo **videos**
 
 | Channel | Gemini images | Veo videos | Notes |
 | --- | :---: | :---: | --- |
-| npm `pictx` SDK | ✅ | ✅ | `pictx/browser`, `pictx/node`, `pictx/gemini` |
+| npm `@pictx/gemini-veo-watermark-remover` | ✅ | ✅ | `.../browser`, `.../node`, `.../gemini` |
 | CLI `pictx remove` | ✅ | ✅ | Batch folders with `--out-dir` |
 | Agent Skill | ✅ | ✅ | Wraps the CLI |
 | [removegeminiwatermark.io](https://removegeminiwatermark.io) | ✅ | ✅ | Upload-based WebCodecs pipeline |
@@ -96,12 +96,12 @@ For scripting, CI, and local batch workflows:
 
 ```bash
 # Using npx (zero install)
-npx pictx remove image.png
-npx pictx remove video.mp4
-npx pictx remove old-veo-video.mp4 --legacy
+npx @pictx/gemini-veo-watermark-remover remove image.png
+npx @pictx/gemini-veo-watermark-remover remove video.mp4
+npx @pictx/gemini-veo-watermark-remover remove old-veo-video.mp4 --legacy
 
-# Or install globally
-npm i -g pictx
+# Or install globally (CLI command is still `pictx`)
+npm i -g @pictx/gemini-veo-watermark-remover
 pictx remove image.png -o clean.png
 pictx remove video.mp4 --verbose              # Gemini 3.5+ diamond logo
 pictx remove old-veo-video.mp4 --legacy       # old "Veo" text watermark
@@ -118,7 +118,7 @@ Supported formats:
 
 ```javascript
 // Browser — remove Gemini watermark from image
-import { removeGeminiWatermark } from 'pictx/browser';
+import { removeGeminiWatermark } from '@pictx/gemini-veo-watermark-remover/browser';
 
 const { blob, detected, confidence } = await removeGeminiWatermark(file);
 if (detected) {
@@ -127,7 +127,7 @@ if (detected) {
 }
 
 // Browser — process Gemini 3.5+ diamond video
-import { processVideoFile } from 'pictx/browser';
+import { processVideoFile } from '@pictx/gemini-veo-watermark-remover/browser';
 
 const cleanBlob = await processVideoFile(videoFile, {
   onProgress: (current, total) => console.log(`${current}/${total} frames`),
@@ -137,11 +137,11 @@ const cleanBlob = await processVideoFile(videoFile, {
 const legacyBlob = await processVideoFile(videoFile, { videoProfile: 'legacy' });
 
 // Node.js — file-based API
-import { processVideoFile } from 'pictx/node';
+import { processVideoFile } from '@pictx/gemini-veo-watermark-remover/node';
 await processVideoFile('input.mp4', 'output.mp4');
 
 // Gemini-only lightweight import (no video deps)
-import { processImage, createImageProcessor } from 'pictx/gemini';
+import { processImage, createImageProcessor } from '@pictx/gemini-veo-watermark-remover/gemini';
 ```
 
 ### Can't Remove Your Watermark?
@@ -286,7 +286,7 @@ node build.js --watch
 ## Agent Skill
 
 ```bash
-pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/pictx
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/gemini-veo-watermark-remover
 node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ```
 

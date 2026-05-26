@@ -1,6 +1,9 @@
 {
-  "name": "pictx",
-  "version": "0.2.1",
+  "name": "@pictx/gemini-veo-watermark-remover",
+  "version": "0.2.2",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Remove Gemini 3.5+/legacy image watermarks and Veo video watermarks locally with reverse alpha blending. Browser, CLI, SDK, extension, userscript.",
   "type": "module",
   "main": "./dist/index.js",

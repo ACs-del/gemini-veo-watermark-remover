@@ -3,7 +3,7 @@ name: gemini-veo-watermark-remover
 description: Remove visible Gemini image and Veo video watermarks locally using reverse alpha blending. Use when cleaning Gemini-generated images or Veo MP4 outputs without uploading files to a server.
 ---
 
-# Gemini & Veo Watermark Remover (pictx)
+# Gemini & Veo Watermark Remover (@pictx)
 
 Local watermark removal for Gemini images and Veo videos using calibrated reverse alpha blending.
 
@@ -15,6 +15,12 @@ Local watermark removal for Gemini images and Veo videos using calibrated revers
 | Chrome extension / userscript | ✅ | ❌ |
 
 Use the Skill or CLI for Veo MP4 files. Extension and userscript only integrate with Gemini page image previews.
+
+## Install
+
+```bash
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/gemini-veo-watermark-remover
+```
 
 ## When to use
 
@@ -52,6 +58,14 @@ node skills/gemini-veo-watermark-remover/scripts/run.mjs ./old-veo.mp4 ./clean.m
 
 ```bash
 node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png --json
+```
+
+## npm / CLI (outside Skill)
+
+```bash
+npx @pictx/gemini-veo-watermark-remover remove image.png
+npm i -g @pictx/gemini-veo-watermark-remover
+pictx remove video.mp4
 ```
 
 ## Notes

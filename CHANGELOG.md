@@ -1,6 +1,14 @@
 # Changelog
 
-All notable changes to `pictx` are documented here.
+All notable changes to `@pictx/gemini-veo-watermark-remover` are documented here.
+
+## [0.2.2] - 2026-05-26
+
+### Changed
+
+- npm package renamed from `pictx` to `@pictx/gemini-veo-watermark-remover` (CLI binary remains `pictx`)
+- SDK imports now use `@pictx/gemini-veo-watermark-remover/browser`, `/node`, `/gemini`
+- Skill identifier updated to `@pictx/gemini-veo-watermark-remover`
 
 ## [0.2.1] - 2026-05-26
 
