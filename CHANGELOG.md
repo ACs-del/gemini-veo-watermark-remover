@@ -2,6 +2,19 @@
 
 All notable changes to `@pictx/gemini-veo-watermark-remover` are documented here.
 
+## [0.2.3] - 2026-05-27
+
+### Added
+
+- README video before/after demos under `docs/demo/` (1080p diamond + 720p legacy)
+- `scripts/process-video-native.mjs` for local video fixture generation via system ffmpeg
+- Video fixture download and processing guide in `tests/fixtures/README.md`
+
+### Changed
+
+- Removed opening GPT Image 2 promo block from README files
+- Gitignore large video regression fixtures under `tests/fixtures/videos/`
+
 ## [0.2.2] - 2026-05-26
 
 ### Changed

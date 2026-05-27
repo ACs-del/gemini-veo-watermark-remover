@@ -1,7 +1,5 @@
 [中文文档](README_zh.md)
 
-> 🔥 Tired of Gemini and Veo watermarks? Try the more powerful **GPT Image 2** at [pictx.ai](https://pictx.ai) — free for a limited time.
-
 # Gemini & Veo Watermark Remover — Lossless AI Watermark Removal Tool
 
 An open-source tool to **remove Gemini image watermarks and Veo video watermarks** from supported AI-generated outputs with high-fidelity, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact **Reverse Alpha Blending** algorithm instead of unpredictable AI inpainting.
@@ -51,9 +49,27 @@ For Veo videos from the browser, use the online tool or `npx pictx remove video.
 
 ## Watermark Removal Examples
 
+### Images
+
 | Original Image | Watermark Removed |
 | --- | --- |
 | ![Before](https://removegeminiwatermark.io/images/demo-before.webp) | ![After](https://removegeminiwatermark.io/images/demo-after.webp) |
+
+### Videos
+
+Gemini 3.5+ diamond logo (1920×1080, default profile):
+
+| Before | After |
+| --- | --- |
+| <video src="docs/demo/video-diamond-1080-before.mp4" controls playsinline width="480"></video> | <video src="docs/demo/video-diamond-1080-after.mp4" controls playsinline width="480"></video> |
+
+Legacy `"Veo"` text watermark (1280×720, `--legacy`):
+
+| Before | After |
+| --- | --- |
+| <video src="docs/demo/video-legacy-720-before.mp4" controls playsinline width="320"></video> | <video src="docs/demo/video-legacy-720-after.mp4" controls playsinline width="320"></video> |
+
+Full-resolution samples and local regeneration steps live under `tests/fixtures/videos/` (see [tests/fixtures/README.md](tests/fixtures/README.md)). For browser-based processing without installing ffmpeg, use [removegeminiwatermark.io](https://removegeminiwatermark.io).
 
 ## What's New
 

@@ -1,7 +1,5 @@
 [English](README.md)
 
-> 🔥 厌倦了 Gemini 和 Veo 水印？试试更强大的 **GPT Image 2**：[pictx.ai](https://pictx.ai) — 限时免费。
-
 # Gemini & Veo 去水印工具 — 无损去除 AI 图片与视频水印
 
 开源的 Gemini/Veo 水印去除工具，在已支持的 Gemini 导出图片和 Veo 导出视频上可提供高保真、可复现的去水印结果。基于纯 JavaScript 实现，使用数学精确的 **反向 Alpha 混合** 算法，而非 AI 修复。
@@ -51,9 +49,27 @@ Veo 视频请用在线工具或 `npx pictx remove video.mp4`。扩展与油猴�
 
 ## 水印移除示例
 
+### 图片
+
 | 原图 | 移除后 |
 | --- | --- |
 | ![Before](https://removegeminiwatermark.io/images/demo-before.webp) | ![After](https://removegeminiwatermark.io/images/demo-after.webp) |
+
+### 视频
+
+Gemini 3.5+ diamond logo（1920×1080，默认 profile）：
+
+| 处理前 | 处理后 |
+| --- | --- |
+| <video src="docs/demo/video-diamond-1080-before.mp4" controls playsinline width="480"></video> | <video src="docs/demo/video-diamond-1080-after.mp4" controls playsinline width="480"></video> |
+
+旧版 `"Veo"` 文字水印（1280×720，需 `--legacy`）：
+
+| 处理前 | 处理后 |
+| --- | --- |
+| <video src="docs/demo/video-legacy-720-before.mp4" controls playsinline width="320"></video> | <video src="docs/demo/video-legacy-720-after.mp4" controls playsinline width="320"></video> |
+
+完整分辨率样本与本地再生步骤见 `tests/fixtures/videos/`（[tests/fixtures/README.md](tests/fixtures/README.md)）。不想安装 ffmpeg 时，可直接使用 [removegeminiwatermark.io](https://removegeminiwatermark.io) 在浏览器中处理视频。
 
 ## 最新变化
 
