@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 const { createFile } = require('mp4box');
 
 function loadFixture(name) {
-  const buf = readFileSync(new URL(`./fixtures/videos/${name}`, import.meta.url));
+  const buf = readFileSync(new URL(`./fixtures/codec/${name}`, import.meta.url));
   const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   ab.fileStart = 0;
   return ab;
@@ -20,7 +20,7 @@ function loadFixture(name) {
 
 test('extractCodecDescription returns AVCDecoderConfigurationRecord for diamond-1080', () => {
   const mp4 = createFile();
-  const buffer = loadFixture('diamond-1080-gemini.mp4');
+  const buffer = loadFixture('h264-1920x1080.mp4');
 
   const description = new Promise((resolve, reject) => {
     mp4.onReady = (info) => {
@@ -44,7 +44,7 @@ test('extractCodecDescription returns AVCDecoderConfigurationRecord for diamond-
 
 test('buildAvcDecoderConfigurationRecord matches mp4box write payload size', () => {
   const mp4 = createFile();
-  const buffer = loadFixture('legacy-720-veo3-cat.mp4');
+  const buffer = loadFixture('h264-1280x720.mp4');
 
   return new Promise((resolve, reject) => {
     mp4.onReady = (info) => {

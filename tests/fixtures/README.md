@@ -2,6 +2,15 @@
 
 Synthetic watermark samples are generated in-memory during tests (see `tests/imageProcessor.test.js`).
 
+## Committed codec fixtures (`tests/fixtures/codec/`)
+
+Tiny ffmpeg-generated H.264 MP4 clips (~2 KB each) used by `tests/codecDescription.test.js`. These stay in git so CI does not depend on downloading large Veo samples.
+
+| File | Resolution | Purpose |
+| --- | --- | --- |
+| `h264-1920x1080.mp4` | 1920×1080 | avcC extraction smoke test |
+| `h264-1280x720.mp4` | 1280×720 | avcC builder size parity test |
+
 To add real regression fixtures:
 
 1. Use anonymized Gemini exports only — no personal content.
