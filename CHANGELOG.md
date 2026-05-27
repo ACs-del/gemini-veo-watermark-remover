@@ -2,6 +2,20 @@
 
 All notable changes to `@pictx/gemini-veo-watermark-remover` are documented here.
 
+## [0.2.4] - 2026-05-28
+
+### Fixed
+
+- Browser WebCodecs H.264 decoding now passes MP4 `avcC` as `VideoDecoderConfig.description` (fixes `A key frame is required after configure()` / missing description errors on Gemini/Veo MP4 fixtures)
+- WebCodecs decoder waits for sample extraction to finish before calling `decoder.flush()`, avoiding premature flush on empty decode queues
+- Browser encoder uses source video codec level, mp4-muxer `firstTimestampBehavior: 'offset'`, and explicit color space metadata for stable MP4 output
+
+### Added
+
+- `src/video/codecDescription.js` for avcC → AVCDecoderConfigurationRecord extraction
+- Node tests in `tests/codecDescription.test.js`
+- Playwright browser regression: `scripts/test-browser-webcodecs.mjs` (uses `tests/fixtures/videos/`)
+
 ## [0.2.3] - 2026-05-27
 
 ### Added

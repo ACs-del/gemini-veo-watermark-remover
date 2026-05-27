@@ -1,6 +1,6 @@
 {
   "name": "@pictx/gemini-veo-watermark-remover",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publishConfig": {
     "access": "public"
   },
@@ -43,6 +43,7 @@
     "build": "node build.js",
     "dev": "node build.js --watch",
     "test": "node --test tests/*.test.js",
+    "test:browser-video": "node scripts/test-browser-webcodecs.mjs",
     "package:extension": "node scripts/package-extension.mjs"
   },
   "keywords": [
@@ -77,6 +78,7 @@
     "sharp": "^0.33.0"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "playwright": "^1.58.2"
   }
 }

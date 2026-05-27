@@ -36,6 +36,7 @@ export async function processVideo(input, options = {}) {
     height: videoInfo.height,
     fps: videoInfo.fps,
     bitrate: bitrate || 5_000_000,
+    codec: videoInfo.codec,
     audio: audioData
       ? {
           codec: audioData.codec,

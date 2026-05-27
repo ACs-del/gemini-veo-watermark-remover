@@ -2,6 +2,7 @@
  * WebCodecs-based video decoder (browser only).
  */
 
+import { extractCodecDescription } from './codecDescription.js';
 import { VideoDecoderBase } from './videoDecoder.base.js';
 
 export class WebCodecsDecoder extends VideoDecoderBase {
@@ -33,21 +34,6 @@ export class WebCodecsDecoder extends VideoDecoderBase {
       throw new Error('No video track found');
     }
 
-    this.#videoInfo = {
-      width: videoTrack.video.width,
-      height: videoTrack.video.height,
-      frameCount: videoTrack.nb_samples,
-      duration: videoTrack.duration / videoTrack.timescale,
-      fps: videoTrack.nb_samples / (videoTrack.duration / videoTrack.timescale),
-      codec: videoTrack.codec,
-      videoTrackId: videoTrack.id,
-    };
-
-    const audioTrack = info.audioTracks?.[0] ?? null;
-    if (audioTrack) {
-      this.#audioData = await this.#readTrackSamples(createFile, audioTrack);
-    }
-
     this.#videoMp4 = createFile();
     await new Promise((resolve, reject) => {
       this.#videoMp4.onReady = resolve;
@@ -57,6 +43,22 @@ export class WebCodecsDecoder extends VideoDecoderBase {
       this.#videoMp4.appendBuffer(buffer);
       this.#videoMp4.flush();
     });
+
+    this.#videoInfo = {
+      width: videoTrack.video.width,
+      height: videoTrack.video.height,
+      frameCount: videoTrack.nb_samples,
+      duration: videoTrack.duration / videoTrack.timescale,
+      fps: videoTrack.nb_samples / (videoTrack.duration / videoTrack.timescale),
+      codec: videoTrack.codec,
+      videoTrackId: videoTrack.id,
+      description: extractCodecDescription(this.#videoMp4, videoTrack.id),
+    };
+
+    const audioTrack = info.audioTracks?.[0] ?? null;
+    if (audioTrack) {
+      this.#audioData = await this.#readTrackSamples(createFile, audioTrack);
+    }
 
     return this.#videoInfo;
   }
@@ -110,10 +112,13 @@ export class WebCodecsDecoder extends VideoDecoderBase {
       throw new Error('Call open() first');
     }
 
-    const { width, height, videoTrackId } = this.#videoInfo;
+    const { width, height, videoTrackId, frameCount } = this.#videoInfo;
     const pendingFrames = [];
     let resolveNext = null;
     let done = false;
+    let extractionDone = false;
+    let flushed = false;
+    let samplesSubmitted = 0;
 
     const decoder = new VideoDecoder({
       output: (frame) => {
@@ -141,6 +146,11 @@ export class WebCodecsDecoder extends VideoDecoderBase {
       error: (e) => {
         console.error('Decoder error:', e);
         done = true;
+        if (resolveNext) {
+          const r = resolveNext;
+          resolveNext = null;
+          r(null);
+        }
       },
     });
 
@@ -148,6 +158,7 @@ export class WebCodecsDecoder extends VideoDecoderBase {
       codec: this.#videoInfo.codec,
       codedWidth: width,
       codedHeight: height,
+      description: this.#videoInfo.description,
     });
 
     this.#videoMp4.onSamples = (_trackId, _user, trackSamples) => {
@@ -159,6 +170,16 @@ export class WebCodecsDecoder extends VideoDecoderBase {
           data: sample.data,
         });
         decoder.decode(chunk);
+        samplesSubmitted++;
+      }
+
+      if (samplesSubmitted >= frameCount) {
+        extractionDone = true;
+        if (resolveNext && pendingFrames.length === 0 && decoder.decodeQueueSize === 0) {
+          const r = resolveNext;
+          resolveNext = null;
+          r(null);
+        }
       }
     };
 
@@ -168,18 +189,26 @@ export class WebCodecsDecoder extends VideoDecoderBase {
     while (!done) {
       if (pendingFrames.length > 0) {
         yield pendingFrames.shift();
-      } else {
-        const frame = await new Promise((resolve) => {
-          resolveNext = resolve;
-          if (decoder.decodeQueueSize === 0) {
-            decoder.flush().then(() => {
-              done = true;
-              resolve(null);
-            });
+        continue;
+      }
+
+      if (extractionDone && decoder.decodeQueueSize === 0) {
+        if (!flushed) {
+          await decoder.flush();
+          flushed = true;
+          if (pendingFrames.length > 0) {
+            continue;
           }
-        });
-        if (frame) yield frame;
-        else break;
+        }
+        done = true;
+        break;
+      }
+
+      const frame = await new Promise((resolve) => {
+        resolveNext = resolve;
+      });
+      if (frame) {
+        yield frame;
       }
     }
 

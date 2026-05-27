@@ -28,6 +28,7 @@ export class WebCodecsEncoder extends VideoEncoderBase {
         height: config.height,
       },
       fastStart: 'in-memory',
+      firstTimestampBehavior: 'offset',
     };
 
     if (config.audio) {
@@ -55,6 +56,13 @@ export class WebCodecsEncoder extends VideoEncoderBase {
       height: config.height,
       bitrate: config.bitrate || 5_000_000,
       framerate: config.fps,
+      avc: { format: 'avc' },
+      colorSpace: {
+        primaries: 'bt709',
+        transfer: 'bt709',
+        matrix: 'bt709',
+        fullRange: false,
+      },
     });
 
     this._target = target;
@@ -66,6 +74,12 @@ export class WebCodecsEncoder extends VideoEncoderBase {
       codedWidth: imageData.width,
       codedHeight: imageData.height,
       timestamp,
+      colorSpace: {
+        primaries: 'bt709',
+        transfer: 'bt709',
+        matrix: 'bt709',
+        fullRange: true,
+      },
     });
 
     const isKey = this.#frameCount % 30 === 0;

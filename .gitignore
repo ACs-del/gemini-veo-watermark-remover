@@ -6,3 +6,4 @@ dist/
 # Large video regression fixtures (~16 MB total); download via tests/fixtures/README.md
 tests/fixtures/videos/*.mp4
 tests/fixtures/videos/fix/
+scripts/browser-test/bundle.js
