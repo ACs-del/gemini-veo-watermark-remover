@@ -65,7 +65,10 @@ function calculateCurrentSmallMargin(width, height) {
   const shortSide = Math.min(width, height)
 
   let sourceLongDim
-  if (shortSide >= 566) {
+  if (longSide > 1100) {
+    sourceLongDim = [2752, 2816, 2848].reduce((closest, value) =>
+      Math.abs(2 * longSide - value) < Math.abs(2 * longSide - closest) ? value : closest)
+  } else if (shortSide >= 566) {
     sourceLongDim = 2752
   } else if (shortSide >= 550) {
     sourceLongDim = 2816
@@ -92,10 +95,13 @@ export function detectGeminiWatermarkConfig(width, height, profile = 'current') 
   const margin = config.margin ?? calculateCurrentSmallMargin(width, height)
 
   // Image must be large enough to contain the watermark + margins
-  const minDim = config.size + margin
+  const scaled = normalizedProfile === 'current' && tier === 'small' ? Math.round(margin / 2) : 0
+  const size = scaled > 40 ? scaled : config.size
+  const alphaMapKey = size === config.size ? config.alphaMapKey : `gemini-v2-scaled-${size}`
+  const minDim = size + margin
   if (width < minDim || height < minDim) return null
 
-  return { tier, profile: normalizedProfile, ...config, margin }
+  return { tier, profile: normalizedProfile, ...config, size, alphaMapKey, margin }
 }
 
 /**

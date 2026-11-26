@@ -84,7 +84,7 @@ function computeNCC(imgData, imgW, x, y, maskAlpha, maskW, maskH, step) {
  * @param {{ x: number, y: number, width: number, height: number }} expectedPosition - Expected region
  * @returns {{ x: number, y: number, confidence: number }|null}
  */
-function findWatermarkPosition(imageData, mask, expectedPosition) {
+function findWatermarkPosition(imageData, mask, expectedPosition, radius) {
   const { width: imgW, height: imgH, data: imgData } = imageData
   const { width: maskW, height: maskH, alpha: maskAlpha } = mask
 
@@ -92,7 +92,7 @@ function findWatermarkPosition(imageData, mask, expectedPosition) {
 
   const expectedX = expectedPosition?.x ?? (imgW - maskW)
   const expectedY = expectedPosition?.y ?? (imgH - maskH)
-  const searchRadius = Math.max(16, Math.round(maskW * 0.75))
+  const searchRadius = radius ?? Math.max(16, Math.round(maskW * 0.75))
   const searchStartX = Math.max(0, expectedX - searchRadius)
   const searchStartY = Math.max(0, expectedY - searchRadius)
   const searchMaxX = Math.min(imgW - maskW, expectedX + searchRadius)
@@ -120,7 +120,7 @@ function findWatermarkPosition(imageData, mask, expectedPosition) {
   }
 
   // Require minimum confidence threshold
-  return bestScore >= 0.5 ? { x: bestX, y: bestY, confidence: bestScore } : null
+  return bestScore > 0 ? { x: bestX, y: bestY, confidence: Math.min(1, bestScore) } : null
 }
 
 function getProfilesToTry(profile) {
@@ -132,7 +132,7 @@ function emptyResult(imageData, reason, attemptedProfiles, profile = null, meta 
   return {
     imageData,
     processed: false,
-    confidence: 0,
+    confidence: meta.confidence ?? 0,
     position: null,
     reason,
     profile,
@@ -193,9 +193,18 @@ function processImageWithProfile(imageData, options, profile) {
       alpha: alphaMapEntry.data,
     }
 
-    const match = findWatermarkPosition(imageData, mask, info.position)
-    if (!match) {
-      return emptyResult(imageData, 'watermark_not_detected', [profile], profile)
+    const threshold = options.threshold ?? 0.35
+    if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+      throw new RangeError('threshold must be between 0 and 1')
+    }
+    // A weaker correlation is meaningful only near the calibrated position.
+    let match = findWatermarkPosition(imageData, mask, info.position, 3)
+    if (!match || match.confidence < threshold) {
+      const wide = findWatermarkPosition(imageData, mask, info.position)
+      if (wide && wide.confidence >= Math.max(0.5, threshold)) match = wide
+    }
+    if (!match || match.confidence < threshold) {
+      return emptyResult(imageData, 'watermark_not_detected', [profile], profile, { confidence: match?.confidence })
     }
 
     confidence = match.confidence
@@ -239,7 +248,7 @@ function processImageWithProfile(imageData, options, profile) {
         'restoration_rejected',
         [profile],
         profile,
-        { decisionTier: validation.decisionTier, validation },
+        { decisionTier: validation.decisionTier, validation, confidence },
       )
     }
     decisionTier = validation.decisionTier
@@ -283,7 +292,7 @@ export function processImage(imageData, options = {}) {
     result.attemptedProfiles = [...attemptedProfiles]
 
     if (result.processed) return result
-    lastResult = result
+    if (!lastResult || result.confidence > lastResult.confidence) lastResult = result
 
     if (result.reason !== 'watermark_not_detected' && result.reason !== 'restoration_rejected') break
   }
@@ -303,67 +312,7 @@ export function processImage(imageData, options = {}) {
  * @returns {{ process(imageData: ImageData, options?: object): object }}
  */
 export function createImageProcessor(targetWidth, targetHeight) {
-  // If dimensions are pre-specified, cache the lookup
-  const cachedByProfile = new Map()
-
-  if (targetWidth && targetHeight) {
-    for (const profile of PROFILE_ORDER) {
-      const info = getGeminiWatermarkInfo(targetWidth, targetHeight, profile)
-      if (info) {
-        cachedByProfile.set(profile, {
-          info,
-          alphaMap: getGeminiAlphaMap(info.alphaMapKey),
-        })
-      }
-    }
-  }
-
-  return {
-    /**
-     * Process an image to remove the Gemini watermark.
-     * @param {ImageData} imageData
-     * @param {{ skipDetection?: boolean, forcePosition?: { x: number, y: number }, profile?: 'auto'|'current'|'legacy'|'v1'|'v2' }} options
-     */
-    process(imageData, options = {}) {
-      // Use cached config if dimensions match, otherwise dynamic lookup
-      if (cachedByProfile.size > 0 && imageData.width === targetWidth && imageData.height === targetHeight) {
-        const profilesToTry = getProfilesToTry(options.profile ?? 'auto')
-        const attemptedProfiles = []
-        let lastResult = null
-
-        for (const profile of profilesToTry) {
-          attemptedProfiles.push(profile)
-          const cached = cachedByProfile.get(profile)
-
-          if (!cached?.info) {
-            lastResult = emptyResult(imageData, 'image_too_small', [...attemptedProfiles], profile)
-            break
-          }
-
-          if (!cached.alphaMap) {
-            lastResult = emptyResult(imageData, 'missing_alpha_map', [...attemptedProfiles], profile)
-            break
-          }
-
-          const result = processImageWithProfile(imageData, options, profile)
-          result.attemptedProfiles = [...attemptedProfiles]
-
-          if (result.processed) return result
-          lastResult = result
-
-          if (result.reason !== 'watermark_not_detected' && result.reason !== 'restoration_rejected') break
-        }
-
-        return {
-          ...(lastResult || emptyResult(imageData, 'watermark_not_detected', attemptedProfiles)),
-          attemptedProfiles,
-        }
-      }
-
-      // Fallback to full dynamic processing
-      return processImage(imageData, options)
-    },
-  }
+  return { process: processImage }
 }
 
 export { findWatermarkPosition, computeNCC }

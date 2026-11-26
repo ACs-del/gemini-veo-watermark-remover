@@ -16,6 +16,7 @@ export interface VideoProgressCallback {
 export function removeGeminiWatermark(
   file: File | Blob,
   options?: {
+    threshold?: number
     quality?: number
     format?: string
     skipDetection?: boolean
@@ -27,19 +28,21 @@ export function processVideoFile(
   file: File,
   options?: {
     onProgress?: VideoProgressCallback
+    region?: { x: number; y: number; width: number; height: number }
     videoProfile?: 'diamond' | 'legacy'
     bitrate?: number
   },
-): Promise<Blob>
+): Promise<Blob & { skipped: boolean; reason: string | null; processedFrames: number; skippedFrames: number }>
 
 export function processVideo(
   input: File | Blob,
   options?: {
     onProgress?: VideoProgressCallback
+    region?: { x: number; y: number; width: number; height: number }
     videoProfile?: 'diamond' | 'legacy'
     bitrate?: number
   },
-): Promise<Blob>
+): Promise<Blob & { skipped: boolean; reason: string | null; processedFrames: number; skippedFrames: number }>
 
 export function removeWatermark(...args: unknown[]): unknown
 export function processFrame(...args: unknown[]): unknown

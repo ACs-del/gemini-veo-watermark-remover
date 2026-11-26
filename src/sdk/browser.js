@@ -65,7 +65,7 @@ export async function removeGeminiWatermark(file, options = {}) {
 
   // Process the image
   const { processImage } = await import('../core/gemini/imageProcessor.js')
-  const result = processImage(imageData, { skipDetection, profile, adaptiveMode, maxPasses })
+  const result = processImage(imageData, { skipDetection, profile, adaptiveMode, maxPasses, threshold: options.threshold })
 
   if (!result.processed) {
     return {
@@ -73,7 +73,7 @@ export async function removeGeminiWatermark(file, options = {}) {
       width,
       height,
       detected: false,
-      confidence: 0,
+      confidence: result.confidence,
       status: result.reason || 'not_processed',
       profile: result.profile,
       attemptedProfiles: result.attemptedProfiles,

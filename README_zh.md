@@ -2,6 +2,8 @@
 
 # Gemini & Veo 去水印工具 — 无损去除 AI 图片与视频水印
 
+0.3.0 对照 GeminiWatermarkTool v0.3.2 同步了半尺寸图片及阈值处理，并移植了 VeoWatermarkRemover v0.6.5-demo 的部分视频布局。Node 视频处理需要安装 FFmpeg 和 ffprobe。视频可用 `--region x,y,width,height` 指定位置，图片可用 `--threshold 0.7` 提高检测阈值。
+
 开源的 Gemini/Veo 水印去除工具，在已支持的 Gemini 导出图片和 Veo 导出视频上可提供高保真、可复现的去水印结果。基于纯 JavaScript 实现，使用数学精确的 **反向 Alpha 混合** 算法，而非 AI 修复。
 
 🆕 **支持 Gemini 3.5+** — 图片引擎默认优先检测当前 Gemini 水印 profile；视频引擎默认处理 Gemini 3.5 的 diamond logo。
@@ -25,7 +27,7 @@
 
 - ✅ **Gemini + Veo** — 同时支持 Gemini 图片水印和 Veo 视频水印。
 - ✅ **Gemini 3.5+ + 旧版** — 支持当前 36×36/96×96 Gemini profile，并自动回退旧版。
-- ✅ **Gemini 3.5 视频 diamond** — 对齐上游 VeoWatermarkRemover v0.5.0：默认处理 diamond logo，旧 `"Veo"` 文字用 `--legacy`。
+- ✅ **Gemini 3.5 视频 diamond** — 对齐上游 VeoWatermarkRemover v0.6.5：默认处理 diamond logo，旧 `"Veo"` 文字用 `--legacy`。
 - ✅ **100% 本地处理** — 浏览器或本机处理，不上传文件。
 - ✅ **数学精确** — 基于反向 Alpha 混合公式，而不是 AI 猜测。
 - ✅ **自动检测** — 使用 NCC 模板匹配识别水印位置和尺寸。
@@ -45,7 +47,7 @@
 | Chrome 扩展 | ✅ | ❌ | 仅 Gemini 页面图片 |
 | 油猴脚本 | ✅ | ❌ | 仅 Gemini 页面图片 |
 
-Veo 视频请用在线工具或 `npx pictx remove video.mp4`。扩展与油猴面向聊天预览集成，不做整文件视频解码。
+Veo 视频请用在线工具或 `pictx remove video.mp4`。扩展与油猴面向聊天预览集成，不做整文件视频解码。
 
 ## 水印移除示例
 
@@ -73,7 +75,7 @@ Gemini 3.5+ diamond logo（1920×1080，默认 profile）：
 
 ## 最新变化
 
-视频引擎已对齐 [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)。Gemini 3.5+ 视频输出现在使用右下角 Gemini diamond logo，而不是旧版 `"Veo"` 文字，因此 `pictx remove video.mp4` 默认处理 diamond profile。
+视频引擎已对齐 [VeoWatermarkRemover v0.6.5-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.6.5-demo)。Gemini 3.5+ 视频输出现在使用右下角 Gemini diamond logo，而不是旧版 `"Veo"` 文字，因此 `pictx remove video.mp4` 默认处理 diamond profile。
 
 旧的 pre-Gemini-3.5 `"Veo"` 文字水印视频需要显式加 `--legacy`。视频 profile 之间不会自动 fallback，因为两者形状和位置不同，错误套用会破坏画面。
 
@@ -92,7 +94,7 @@ Gemini 3.5+ diamond logo（1920×1080，默认 profile）：
 
 在 Gemini 页面自动处理生成**图片**（不支持 Veo 视频）：
 
-1. 从 Chrome Web Store 安装（即将上线）、加载 `src/extension/`，或使用 GitHub Release zip。
+1. 下载并解压 [Chrome 扩展 ZIP](https://github.com/ACs-del/gemini-veo-watermark-remover/releases/download/v0.3.0/pictx-extension-v0.3.0.zip)，在 `chrome://extensions` 开启开发者模式，选择「加载已解压的扩展程序」。
 2. 打开 Gemini，扩展自动处理支持的图片。
 3. 预览、复制、下载均返回清理后的图片。
 4. 若页面变慢，可在 popup 中关闭开关并刷新 Gemini。
@@ -202,7 +204,7 @@ original = (watermarked - alpha * logo) / (1 - alpha)
 
 ### Gemini 3.5+ 视频 Profile 支持
 
-从 Gemini 3.5 开始，视频输出使用右下角 Gemini diamond logo。按照上游 VeoWatermarkRemover v0.5.0，本 JS 版视频管线默认使用 diamond mode，旧 `"Veo"` 文字 profile 保留在 `--legacy` 后面。
+从 Gemini 3.5 开始，视频输出使用右下角 Gemini diamond logo。按照上游 VeoWatermarkRemover v0.6.5，本 JS 版视频管线默认使用 diamond mode，旧 `"Veo"` 文字 profile 保留在 `--legacy` 后面。
 
 | CLI 用法 | 视频 profile | 使用场景 |
 | --- | --- | --- |
@@ -288,8 +290,8 @@ node build.js --watch
 ## Agent Skill
 
 ```bash
-pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/gemini-veo-watermark-remover
-node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill gemini-veo-watermark-remover
+node .agents/skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ```
 
 ## 法律声明
@@ -299,8 +301,8 @@ node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ## 致谢
 
 - 反向 Alpha 混合方法基于 Allen Kuo 的 [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)（MIT License）
-- Gemini 3.5 图片/视频 diamond profile 对齐 [GeminiWatermarkTool v0.3.1](https://github.com/allenk/GeminiWatermarkTool/releases/tag/v0.3.1)
-- 视频 profile 行为对齐 [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)
+- Gemini 3.5 图片/视频 diamond profile 对齐 [GeminiWatermarkTool v0.3.2](https://github.com/allenk/GeminiWatermarkTool/releases/tag/v0.3.2)
+- 视频 profile 行为对齐 [VeoWatermarkRemover v0.6.5-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.6.5-demo)
 
 ## 相关链接
 

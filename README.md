@@ -2,6 +2,8 @@
 
 # Gemini & Veo Watermark Remover — Lossless AI Watermark Removal Tool
 
+Version 0.3.0 tracks the half-scale image geometry and confidence controls in GeminiWatermarkTool v0.3.2 and selected video profiles in VeoWatermarkRemover v0.6.5-demo. Node video requires FFmpeg and ffprobe on PATH. Use `--region x,y,width,height` for a custom video region or `--threshold 0.7` for stricter image detection.
+
 An open-source tool to **remove Gemini image watermarks and Veo video watermarks** from supported AI-generated outputs with high-fidelity, reproducible results. Built with pure JavaScript, the engine uses a mathematically exact **Reverse Alpha Blending** algorithm instead of unpredictable AI inpainting.
 
 🆕 **Gemini 3.5+ support** — images target the current Gemini profile by default with legacy fallback, and videos now default to the Gemini 3.5 diamond logo profile.
@@ -25,7 +27,7 @@ An open-source tool to **remove Gemini image watermarks and Veo video watermarks
 
 - ✅ **Gemini + Veo** — First tool to handle both Gemini image and Veo video watermarks
 - ✅ **Gemini 3.5+ + Legacy** — Current 36×36/96×96 Gemini profile with automatic legacy fallback.
-- ✅ **Gemini 3.5 Video Diamond** — Video mode follows upstream VeoWatermarkRemover v0.5.0: diamond logo by default, old "Veo" text via `--legacy`.
+- ✅ **Gemini 3.5 Video Diamond** — Video mode follows upstream VeoWatermarkRemover v0.6.5: diamond logo by default, old "Veo" text via `--legacy`.
 - ✅ **100% Local Processing** — All processing happens locally. Nothing is uploaded.
 - ✅ **Mathematical Precision** — Reverse Alpha Blending formula, not AI hallucination.
 - ✅ **Auto-Detection** — NCC template matching identifies watermark size and position.
@@ -45,7 +47,7 @@ Not every distribution channel handles both Gemini **images** and Veo **videos**
 | Chrome extension | ✅ | ❌ | Gemini page images only; copy + download cleaned |
 | Userscript | ✅ | ❌ | Gemini page images only |
 
-For Veo videos from the browser, use the online tool or `npx pictx remove video.mp4`. The extension and userscript intentionally stay image-only because they integrate with Gemini chat previews, not whole-file video decoding.
+For Veo videos from the browser, use the online tool or `pictx remove video.mp4`. The extension and userscript intentionally stay image-only because they integrate with Gemini chat previews, not whole-file video decoding.
 
 ## Watermark Removal Examples
 
@@ -73,7 +75,7 @@ Full-resolution samples and local regeneration steps live under `tests/fixtures/
 
 ## What's New
 
-The video engine has been updated to follow [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo). Gemini 3.5+ video outputs now use the Gemini diamond logo instead of the old "Veo" text overlay, so `pictx remove video.mp4` targets the diamond profile by default.
+The video engine has been updated to follow [VeoWatermarkRemover v0.6.5-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.6.5-demo). Gemini 3.5+ video outputs now use the Gemini diamond logo instead of the old "Veo" text overlay, so `pictx remove video.mp4` targets the diamond profile by default.
 
 Older pre-Gemini-3.5 videos with the "Veo" text watermark must be processed with `--legacy`. There is no automatic fallback between video profiles because the shapes and positions differ, and applying the wrong profile can damage the frame.
 
@@ -92,7 +94,7 @@ The fastest and easiest way — works for both Gemini images and Veo videos:
 
 Automatically removes watermarks from Gemini-generated **images** on Gemini pages (not Veo videos):
 
-1. Install from the Chrome Web Store (coming soon), load unpacked from `src/extension/`, or use the GitHub Release zip.
+1. Download the [extension ZIP](https://github.com/ACs-del/gemini-veo-watermark-remover/releases/download/v0.3.0/pictx-extension-v0.3.0.zip), extract it, then open `chrome://extensions`, enable Developer mode and choose **Load unpacked**.
 2. Open Gemini. The extension automatically processes supported images.
 3. Preview, copy, and download actions return cleaned images.
 4. If the page becomes slow, disable the extension from the popup and refresh Gemini.
@@ -200,7 +202,7 @@ Starting with Gemini 3.5, Google shifted the visible image watermark position an
 
 ### Gemini 3.5+ Video Profile Support
 
-Starting with Gemini 3.5, video outputs use the Gemini diamond logo in the bottom-right corner. Following upstream VeoWatermarkRemover v0.5.0, the JS video pipeline now uses diamond mode by default and keeps the older "Veo" text profile behind `--legacy`.
+Starting with Gemini 3.5, video outputs use the Gemini diamond logo in the bottom-right corner. Following upstream VeoWatermarkRemover v0.6.5, the JS video pipeline now uses diamond mode by default and keeps the older "Veo" text profile behind `--legacy`.
 
 | CLI usage | Video profile | Use case |
 | --- | --- | --- |
@@ -302,8 +304,8 @@ node build.js --watch
 ## Agent Skill
 
 ```bash
-pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/gemini-veo-watermark-remover
-node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill gemini-veo-watermark-remover
+node .agents/skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ```
 
 ## Legal Disclaimer
@@ -313,8 +315,8 @@ This project is released under the MIT License. The removal of watermarks may ha
 ## Credits
 
 - Reverse Alpha Blending method based on [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool) by Allen Kuo (MIT License)
-- Gemini 3.5 image/video diamond profile follows [GeminiWatermarkTool v0.3.1](https://github.com/allenk/GeminiWatermarkTool/releases/tag/v0.3.1)
-- Video profile behavior follows [VeoWatermarkRemover v0.5.0-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.5.0-demo)
+- Gemini 3.5 image/video diamond profile follows [GeminiWatermarkTool v0.3.2](https://github.com/allenk/GeminiWatermarkTool/releases/tag/v0.3.2)
+- Video profile behavior follows [VeoWatermarkRemover v0.6.5-demo](https://github.com/allenk/VeoWatermarkRemover/releases/tag/v0.6.5-demo)
 
 ## Related Links
 

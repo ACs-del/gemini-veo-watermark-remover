@@ -6,7 +6,8 @@
  */
 
 // Initialise default storage values on install
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(details => {
+  if (details.reason !== 'install') return;
   chrome.storage.local.set({
     gvwrEnabled: true,
     gvwrTotalCleaned: 0,

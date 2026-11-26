@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Handle scaled Gemini V2 image masks and position-anchored matches against the v0.3.2 image reference.
+- Share the detector between the SDK, userscript, and Chrome extension.
+- Support 720p standard, compact and stamped diamonds, skip occluded frames, and accept an explicit video region.
+- Use browser-local MP4, MOV and WebM conversion with audio track checks. Node video uses system FFmpeg and ffprobe.
+- Fix standalone Skill invocation and ship the extension as a versioned ZIP.
+
+
 All notable changes to `@pictx/gemini-veo-watermark-remover` are documented here.
 
 ## [0.2.4] - 2026-05-28

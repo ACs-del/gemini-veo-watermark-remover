@@ -4,12 +4,22 @@ const isWatch = process.argv.includes('--watch')
 
 const common = {
   bundle: true,
+  packages: 'external',
   sourcemap: true,
   target: 'es2022',
   logLevel: 'info',
 }
 
+const { readFile } = await import('node:fs/promises')
+const userscriptHeader = (await readFile('src/shared/userscript-header.txt', 'utf8')).trimEnd()
 const configs = [
+  ...['extension', 'userscript'].map(channel => ({
+    bundle: true, format: 'iife', platform: 'browser', target: 'es2022',
+    entryPoints: [`src/shared/${channel}-entry.js`],
+    outfile: channel === 'extension' ? 'src/extension/content.js' : 'src/userscript/gemini-veo-watermark-remover.user.js',
+    external: ['sharp', 'node:fs/promises'],
+    banner: channel === 'userscript' ? { js: userscriptHeader } : undefined,
+  })),
   // Main SDK (Node.js ESM)
   {
     ...common,

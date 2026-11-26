@@ -1,6 +1,6 @@
 {
   "name": "@pictx/gemini-veo-watermark-remover",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "publishConfig": {
     "access": "public"
   },
@@ -30,7 +30,9 @@
     "pictx": "bin/pictx.mjs"
   },
   "files": [
-    "dist/",
+    "dist/*.js",
+    "dist/*.d.ts",
+    "dist/*.js.map",
     "bin/",
     "assets/masks/",
     "skills/",
@@ -71,6 +73,7 @@
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
+    "mediabunny": "1.66.4",
     "mp4-muxer": "^5.1.3",
     "mp4box": "^0.5.4"
   },

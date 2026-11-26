@@ -19,7 +19,7 @@ Use the Skill or CLI for Veo MP4 files. Extension and userscript only integrate 
 ## Install
 
 ```bash
-pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/gemini-veo-watermark-remover
+pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill gemini-veo-watermark-remover
 ```
 
 ## When to use
@@ -33,31 +33,31 @@ pnpm dlx skills add ACs-del/gemini-veo-watermark-remover --skill @pictx/gemini-v
 ### Image (PNG/JPEG/WebP)
 
 ```bash
-node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
+node .agents/skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png
 ```
 
 ### Video (MP4)
 
 ```bash
-node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.mp4 ./clean.mp4
+node .agents/skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.mp4 ./clean.mp4
 ```
 
 ### Batch folder
 
 ```bash
-node skills/gemini-veo-watermark-remover/scripts/run.mjs ./photos --out-dir ./clean
+node .agents/skills/gemini-veo-watermark-remover/scripts/run.mjs ./photos --out-dir ./clean
 ```
 
 ### Legacy Veo text watermark
 
 ```bash
-node skills/gemini-veo-watermark-remover/scripts/run.mjs ./old-veo.mp4 ./clean.mp4 --legacy
+node .agents/skills/gemini-veo-watermark-remover/scripts/run.mjs ./old-veo.mp4 ./clean.mp4 --legacy
 ```
 
 ### JSON output (for automation)
 
 ```bash
-node skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png --json
+node .agents/skills/gemini-veo-watermark-remover/scripts/run.mjs ./input.png ./clean.png --json
 ```
 
 ## npm / CLI (outside Skill)
@@ -71,6 +71,6 @@ pictx remove video.mp4
 ## Notes
 
 - Only removes **visible** overlays; does not remove SynthID
-- Diamond video mode supports 1920×1080 and 1080×1920
+- Diamond video supports 720p and 1080p in landscape or portrait. Use --region x,y,width,height to specify another location.
 - Image pipeline uses restoration validation by default (`--adaptive off` to disable)
-- Requires `npm install` in the package root (optional `sharp` for image I/O)
+- Video requires FFmpeg and ffprobe on PATH. A standalone skill installs the versioned CLI with npm on first use.

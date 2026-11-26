@@ -50,7 +50,7 @@ curl -L -o diamond-portrait-1080-gemini.mp4 \
 
 ## Process video fixtures locally
 
-The published CLI routes Node.js video processing through `@ffmpeg/ffmpeg`, which currently fails with `ffmpeg.wasm does not support nodejs`. For local fixture generation, use system ffmpeg via:
+The CLI, Node SDK, and fixture generator share the native FFmpeg pipeline. Install FFmpeg and ffprobe for video tests:
 
 ```bash
 # Gemini 3.5+ diamond (1080p landscape)

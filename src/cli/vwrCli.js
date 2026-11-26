@@ -33,6 +33,8 @@ Options:
   --overwrite      Overwrite output if it exists
   --format, -f     Output format for images (png, jpeg, webp) [default: same as input]
   --quality, -q    Output quality for lossy formats (0-100) [default: 95]
+  --threshold      Minimum image detection confidence (0 to 1)
+  --region         Video watermark rectangle x,y,width,height
   --skip-detect    Skip NCC detection, use expected position directly
   --adaptive       Restoration validation: auto (default) or off
   --max-passes     Max profile/pass attempts for images [default: 4]
@@ -118,7 +120,7 @@ function buildOutputPath(inputPath, values, fileType, outDir) {
   const base = basename(inputPath, ext)
   const outputExt = fileType === 'image'
     ? getOutputExtension(ext, values.format)
-    : ext || '.mp4'
+    : '.mp4'
 
   if (outDir) {
     return join(resolve(outDir), `${base}_clean${outputExt}`)
@@ -170,6 +172,7 @@ async function processImageFile(inputPath, outputPath, options = {}) {
     profile: options.profile ?? 'auto',
     adaptiveMode: options.adaptiveMode ?? 'auto',
     maxPasses: options.maxPasses,
+    threshold: options.threshold,
   })
 
   if (options.verbose) {
@@ -193,7 +196,7 @@ async function processImageFile(inputPath, outputPath, options = {}) {
       height,
       detected: false,
       skipped: true,
-      confidence: 0,
+      confidence: result.confidence,
       profile: result.profile,
       attemptedProfiles: result.attemptedProfiles || [],
       decisionTier: result.decisionTier ?? null,
@@ -257,6 +260,7 @@ async function processSingleInput(inputPath, values, profile, adaptiveMode, maxP
 
     const result = await processImageFile(inputPath, outputPath, {
       skipDetection: values['skip-detect'],
+      threshold: values.threshold === undefined ? undefined : Number(values.threshold),
       verbose: values.verbose,
       quality: values.quality ? parseInt(values.quality, 10) : 95,
       profile,
@@ -300,10 +304,16 @@ async function processSingleInput(inputPath, values, profile, adaptiveMode, maxP
       }
     : undefined
 
-  const result = await processVideoFile(inputPath, outputPath, { onProgress, videoProfile })
+  let region
+  if (values.region !== undefined) {
+    if (!/^\d+,\d+,\d+,\d+$/.test(values.region)) throw new Error('Expected --region x,y,width,height')
+    const [x, y, width, height] = values.region.split(',').map(Number)
+    region = { x, y, width, height }
+  }
+  const result = await processVideoFile(inputPath, outputPath, { onProgress, videoProfile, region })
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
 
-  if (values.json) {
+  if (emitJson) {
     console.log(JSON.stringify({
       success: !result.skipped,
       type: 'video',
@@ -318,7 +328,7 @@ async function processSingleInput(inputPath, values, profile, adaptiveMode, maxP
       skippedFrames: result.skippedFrames || 0,
       elapsed: parseFloat(elapsed),
     }))
-  } else {
+  } else if (!values.json) {
     process.stdout.write('\n')
     if (result.skipped) {
       console.log(`⚠ No supported ${videoProfile} video watermark processed (${result.reason || 'not_processed'}), video encoded unchanged → ${outputPath}`)
@@ -353,6 +363,8 @@ export async function main(argv = process.argv.slice(2)) {
       overwrite: { type: 'boolean', default: false },
       format: { type: 'string', short: 'f' },
       quality: { type: 'string', short: 'q' },
+      threshold: { type: 'string' },
+      region: { type: 'string' },
       'skip-detect': { type: 'boolean', default: false },
       adaptive: { type: 'string', default: 'auto' },
       'max-passes': { type: 'string', default: '4' },

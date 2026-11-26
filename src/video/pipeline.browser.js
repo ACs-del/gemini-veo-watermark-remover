@@ -1,83 +1,46 @@
-/**
- * Browser-only video pipeline (WebCodecs — no ffmpeg.wasm).
- */
+import { createFrameProcessor } from '../core/frameProcessor.js'
 
-import { WebCodecsDecoder } from './videoDecoder.webcodecs.js';
-import { WebCodecsEncoder } from './videoEncoder.webcodecs.js';
-import { createFrameProcessor } from '../core/frameProcessor.js';
-
-/**
- * @typedef {Object} ProcessOptions
- * @property {(current: number, total: number) => void} [onProgress]
- * @property {number} [bitrate]
- * @property {'diamond'|'legacy'} [videoProfile]
- */
-
-/**
- * Process a video file to remove Veo watermarks in the browser.
- *
- * @param {File|Blob} input
- * @param {ProcessOptions} options
- * @returns {Promise<Blob>}
- */
-export async function processVideo(input, options = {}) {
-  const { bitrate, onProgress, videoProfile = 'diamond' } = options;
-
-  const decoder = new WebCodecsDecoder();
-  const videoInfo = await decoder.open(input);
-
-  const processor = createFrameProcessor(videoInfo.width, videoInfo.height, { videoProfile });
-
-  const audioData = await decoder.extractAudio();
-
-  const encoder = new WebCodecsEncoder();
-  await encoder.init({
-    width: videoInfo.width,
-    height: videoInfo.height,
-    fps: videoInfo.fps,
-    bitrate: bitrate || 5_000_000,
-    codec: videoInfo.codec,
-    audio: audioData
-      ? {
-          codec: audioData.codec,
-          sampleRate: audioData.sampleRate,
-          numberOfChannels: audioData.numberOfChannels,
-        }
-      : undefined,
-  });
-
-  if (audioData) {
-    await encoder.setAudioTrack(audioData);
-  }
-
-  let frameIndex = 0;
-  let processedFrames = 0;
-  let skippedFrames = 0;
-  let skipReason = null;
-  const totalFrames = videoInfo.frameCount || 0;
-
-  for await (const frame of decoder.decodeFrames()) {
-    const frameResult = processor.process(frame.imageData);
-    if (frameResult.processed) {
-      processedFrames++;
-    } else {
-      skippedFrames++;
-      skipReason = skipReason || frameResult.reason || 'not_processed';
+export async function processVideo(file, options = {}) {
+  const { Input, BlobSource, MP4, QTFF, MATROSKA, WEBM, Output, Mp4OutputFormat, BufferTarget, Conversion } = await import('mediabunny')
+  const input = new Input({ source: new BlobSource(file), formats: [MP4, QTFF, WEBM, MATROSKA] })
+  try {
+    if (!await input.getPrimaryVideoTrack()) throw new Error('No video track found.')
+    const output = new Output({ format: new Mp4OutputFormat(), target: new BufferTarget() })
+    let processor, ctx, skippedFrames = 0, processedFrames = 0, reason
+    const conversion = await Conversion.init({
+      input, output,
+      video: {
+        codec: 'avc', bitrate: options.bitrate || 5_000_000,
+        process(sample) {
+          if (!ctx) {
+            const { displayWidth: w, displayHeight: h } = sample
+            ctx = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true })
+            processor = createFrameProcessor(w, h, options)
+          }
+          sample.draw(ctx, 0, 0)
+          const pixels = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
+          const frame = processor.process(pixels)
+          if (frame.processed) {
+            ctx.putImageData(pixels, 0, 0)
+            processedFrames++
+          } else {
+            reason = frame.reason
+            skippedFrames++
+          }
+          return ctx.canvas
+        },
+      },
+    })
+    if (!conversion.isValid || conversion.discardedTracks.length) {
+      throw new Error('This browser cannot decode or export all tracks in this file.')
     }
-    await encoder.encodeFrame(frame.imageData, frame.timestamp);
-
-    frameIndex++;
-    if (onProgress && totalFrames > 0) {
-      onProgress(frameIndex, totalFrames);
-    }
+    if (options.onProgress) conversion.onProgress = fraction => options.onProgress(Math.round(fraction * 100), 100)
+    await conversion.execute()
+    return Object.assign(new Blob([output.target.buffer], { type: 'video/mp4' }), {
+      processedFrames, skippedFrames, videoProfile: processor?.profile, skipped: !processedFrames,
+      reason: processedFrames ? null : reason || 'no_frames',
+    })
+  } finally {
+    input.dispose()
   }
-
-  await decoder.close();
-  const output = await encoder.finalize();
-  output.videoProfile = processor.profile;
-  output.processedFrames = processedFrames;
-  output.skippedFrames = skippedFrames;
-  output.skipped = processedFrames === 0;
-  output.reason = processedFrames === 0 ? skipReason : null;
-  return output;
 }

@@ -1,0 +1,15 @@
+// ==UserScript==
+// @name         Gemini Image Watermark Remover
+// @namespace    https://removegeminiwatermark.io
+// @version      0.3.0
+// @description  Removes visible Gemini image watermarks on Gemini pages (images only). For Veo videos use removegeminiwatermark.io or pictx CLI. 100% local.
+// @author       ACs-del
+// @match        https://gemini.google.com/*
+// @match        https://aistudio.google.com/*
+// @grant        none
+// @license      MIT
+// @homepageURL  https://removegeminiwatermark.io
+// @supportURL   https://github.com/ACs-del/gemini-veo-watermark-remover/issues
+// @downloadURL  https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js
+// @updateURL    https://removegeminiwatermark.io/userscript/gemini-veo-watermark-remover.user.js
+// ==/UserScript==

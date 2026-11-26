@@ -11,6 +11,8 @@ import {
   loadCalibratedAlphaMap,
 } from '../calibratedAlphaData.js'
 
+import { resizeAlphaMap } from '../embeddedAlphaMaps.js'
+
 const geminiAlphaMapRegistry = new Map()
 
 const GEMINI_ALPHA_MAP_KEYS = [
@@ -89,7 +91,15 @@ export async function loadAlphaMapFromPNG(source, size) {
  * @returns {{ data: Float32Array, width: number, height: number, source: string }|null}
  */
 export function getGeminiAlphaMap(key) {
-  return geminiAlphaMapRegistry.get(key) || loadCalibratedAlphaMap(key)
+  const entry = geminiAlphaMapRegistry.get(key)
+  if (entry) return entry
+  const scaled = /^gemini-v2-scaled-(\d+)$/.exec(key)
+  if (!scaled) return loadCalibratedAlphaMap(key)
+  const size = Number(scaled[1])
+  if (size < 1 || size > 512) return null
+  const base = geminiAlphaMapRegistry.get('gemini-v2-96')
+  const data = resizeAlphaMap(base.data, base.width, base.height, size, size)
+  return { data, width: size, height: size, source: base.source }
 }
 
 export function registerGeminiAlphaMap(key, data, size, source = 'custom') {

@@ -111,3 +111,18 @@ test('legacy profile processes synthetic legacy watermark', () => {
   assert.equal(result.processed, true)
   assert.equal(result.profile, 'legacy')
 })
+
+test('half-scale V2 exports use a 48px current mask at a 96px margin', () => {
+  for (const width of [1376, 1408, 1424]) {
+    const base = createSolidImage(width, 768)
+    const { info, watermarked } = applyGeminiWatermark(base)
+    assert.equal(info.size, 48)
+    assert.equal(info.margin, 96)
+    const strict = processImage(cloneImage(watermarked), { threshold: 1 })
+    assert.equal(strict.processed, false)
+    assert.ok(strict.confidence > 0.9)
+    const result = processImage(watermarked)
+    assert.equal(result.processed, true)
+    assert.deepEqual(result.position, info.position)
+  }
+})
